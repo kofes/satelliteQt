@@ -26,6 +26,17 @@ DEFINES += QT_DEPRECATED_WARNINGS
 SOURCES += main.cpp\
         mainwindow.cpp
 
-HEADERS  += mainwindow.h
+HEADERS  += mainwindow.h \
+    inc/Image.hpp \
+    inc/Math.hpp \
+    inc/Passport.hpp \
+    inc/Satellite.hpp
 
 FORMS    += mainwindow.ui
+
+win32:CONFIG(release, debug|release): LIBS += -L$$PWD/inc/release/ -lsatellite
+else:win32:CONFIG(debug, debug|release): LIBS += -L$$PWD/inc/debug/ -lsatellite
+else:unix: LIBS += -L$$PWD/inc/ -lsatellite
+
+INCLUDEPATH += $$PWD/inc
+DEPENDPATH += $$PWD/inc

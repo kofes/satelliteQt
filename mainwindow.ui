@@ -57,35 +57,35 @@
      <x>0</x>
      <y>0</y>
      <width>600</width>
-     <height>21</height>
+     <height>30</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFile">
     <property name="title">
-     <string>File</string>
+     <string>&amp;File</string>
     </property>
     <addaction name="actionOpen"/>
     <addaction name="actionSave"/>
     <addaction name="separator"/>
-    <addaction name="actionExit"/>
+    <addaction name="actionQuit"/>
    </widget>
    <widget class="QMenu" name="menuView">
     <property name="title">
-     <string>View</string>
+     <string>&amp;View</string>
     </property>
     <addaction name="actionShowExtremes"/>
     <addaction name="actionColor"/>
    </widget>
    <widget class="QMenu" name="menuCalculate">
     <property name="title">
-     <string>Calculate</string>
+     <string>&amp;Calculate</string>
     </property>
     <addaction name="actionSemivariance"/>
     <addaction name="actionVariance"/>
    </widget>
    <widget class="QMenu" name="menuHelp">
     <property name="title">
-     <string>Help</string>
+     <string>&amp;Help</string>
     </property>
     <addaction name="actionAbout_us"/>
    </widget>
@@ -96,42 +96,42 @@
   </widget>
   <action name="actionOpen">
    <property name="text">
-    <string>Open</string>
+    <string>&amp;Open</string>
    </property>
   </action>
   <action name="actionSave">
    <property name="text">
-    <string>Save</string>
+    <string>&amp;Save</string>
    </property>
   </action>
-  <action name="actionExit">
+  <action name="actionQuit">
    <property name="text">
-    <string>Exit</string>
+    <string>&amp;Quit</string>
    </property>
   </action>
   <action name="actionShowExtremes">
    <property name="text">
-    <string>Show extremes</string>
+    <string>&amp;Show extremes</string>
    </property>
   </action>
   <action name="actionColor">
    <property name="text">
-    <string>Color</string>
+    <string>&amp;Color</string>
    </property>
   </action>
   <action name="actionSemivariance">
    <property name="text">
-    <string>Semivariance</string>
+    <string>&amp;Semivariance</string>
    </property>
   </action>
   <action name="actionVariance">
    <property name="text">
-    <string>Variance</string>
+    <string>&amp;Variance</string>
    </property>
   </action>
   <action name="actionAbout_us">
    <property name="text">
-    <string>About us</string>
+    <string>&amp;About us</string>
    </property>
   </action>
  </widget>
