@@ -23,13 +23,13 @@
 struct Date {
   Date () {};
   Date (short year, short month, short day) : year(year), month(month), day(day) {};
-  short year, month, day;
+  short day, month, year;
 };
 
 struct Time {
   Time () {};
   Time (short hour, short minute, short second, short millisecond) : hours(hour), minutes(minute), seconds(second), milliseconds(millisecond) {};
-  short hours, minutes, seconds, milliseconds;
+  short milliseconds, hours, minutes, seconds;
 };
 
 namespace satellite {
@@ -63,16 +63,16 @@ public:
   Default () {};
   Default ( const passport::Default& src );
   Default ( const std::string& fileName );
-  inline uint8_t getFormatType () {
+  inline const uint8_t getFormatType () const {
     return FFh1_FORMAT;
   };
   inline const std::string getName () const {
     return std::string(SAT2_NAME);
   };
-  inline uint32_t getId () {
+  inline const uint32_t getId () const {
     return SAT_ID;
   };
-  inline uint32_t getNodeNum () {
+  inline const uint32_t getNodeNum () const {
     return NODE_NUM;
   };
   const Date getDate () const;

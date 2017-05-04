@@ -6,6 +6,8 @@
 
 QT       += core gui
 
+CONFIG += c++11
+
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
 TARGET = satelliteQt
@@ -24,15 +26,21 @@ DEFINES += QT_DEPRECATED_WARNINGS
 
 
 SOURCES += main.cpp\
-        mainwindow.cpp
+        mainwindow.cpp \
+    createimage.cpp \
+    levels.cpp
 
 HEADERS  += mainwindow.h \
     inc/Image.hpp \
     inc/Math.hpp \
     inc/Passport.hpp \
-    inc/Satellite.hpp
+    inc/Satellite.hpp \
+    createimage.h \
+    levels.h
 
-FORMS    += mainwindow.ui
+FORMS    += mainwindow.ui \
+    createimage.ui \
+    levels.ui
 
 win32:CONFIG(release, debug|release): LIBS += -L$$PWD/inc/release/ -lsatellite
 else:win32:CONFIG(debug, debug|release): LIBS += -L$$PWD/inc/debug/ -lsatellite

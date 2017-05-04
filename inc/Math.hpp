@@ -79,11 +79,13 @@ double g ( short x0, short y0, short x1, short y1, double h, satellite::Image& p
 //Get approximated function by Gauss–Seidel method
 std::vector<double> leastSquares ( unsigned long int degree, std::list<double> x, std::list<double> y, double maxDiff = 1e-2 );
 
-double a ( std::list<double> x, unsigned short degree = 1 );
+double moment ( const std::vector< std::pair<double, unsigned long> >& x, double center = 0, unsigned short degree = 1 );
 
-double m ( std::list<double> x, unsigned short degree = 2 );
+double first_row_moment ( const std::vector< std::pair<double, unsigned long> >& x, unsigned short degree = 1 );
 
-double cov ( std::list<double> x, std::list<double> y );
+double central_moment ( const std::vector< std::pair<double, unsigned long> >& x, unsigned short degree = 2 );
+
+double cov ( const std::vector< std::pair<double, unsigned long> >& x, const std::vector< std::pair<double, unsigned long> >& y );
 
 };
 };
