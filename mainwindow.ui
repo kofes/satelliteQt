@@ -82,6 +82,7 @@
     </property>
     <addaction name="actionShowExtremes"/>
     <addaction name="actionColor"/>
+    <addaction name="actionLevels"/>
    </widget>
    <widget class="QMenu" name="menuCalculate">
     <property name="title">
@@ -144,6 +145,11 @@
   <action name="actionCreate_template">
    <property name="text">
     <string>Create &amp;template</string>
+   </property>
+  </action>
+  <action name="actionLevels">
+   <property name="text">
+    <string>Levels</string>
    </property>
   </action>
  </widget>
