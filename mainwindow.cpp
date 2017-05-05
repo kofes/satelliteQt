@@ -7,7 +7,8 @@ MainWindow::MainWindow(QWidget *parent) :
 {
     ui->setupUi(this);
     scene = new QGraphicsScene(this);
-    item = new QGraphicsPixmapItem();
+    levels = new Levels(this);
+    dialog = new CreateImage(this);
     data_type = Ui::DATA_TYPE::NONE;
     zoom = 0;
     MIN_ZOOM = 10;
@@ -16,7 +17,10 @@ MainWindow::MainWindow(QWidget *parent) :
 
 MainWindow::~MainWindow()
 {
-    delete item;
+    levels->close();
+    delete levels;
+    dialog->close();
+    delete dialog;
     delete scene;
     delete ui;
 }
@@ -49,13 +53,56 @@ void MainWindow::on_actionOpen_triggered()
 
         QImage img(image.width(), image.height(), QImage::Format::Format_RGB32);
 
-        short max = SHRT_MIN;
+        MAX_VALUE = MIN_VALUE = 0;
         for (auto i = 0; i < image.height(); ++i)
             for (auto j = 0; j < image.width(); ++j)
-                max = (max > image[i][j]) ? max : image[i][j];
+                MAX_VALUE = (MAX_VALUE > image[i][j]) ? MAX_VALUE : image[i][j];
+
+        gist.clear();
+        gist.resize(MAX_VALUE-MIN_VALUE+1, std::make_pair(0, 0));
+
+        for (int i = 0; i < image.height(); ++i)
+            for (int j = 0; j < image.width(); ++j)
+                if (image[i][j] > 0) {
+                    gist[image[i][j]].first = image[i][j];
+                    gist[image[i][j]].second++;
+                }
+
+        CENTRAL_VALUE = satellite::math::first_row_moment(gist);
+        AVERAGE_DISP_VALUE = satellite::math::central_moment(gist);
+
+        std::cout << gist.size() << std::endl;
+        std::cout << CENTRAL_VALUE << " : " << std::sqrt(AVERAGE_DISP_VALUE) << std::endl;
+
         for (auto i = 0; i < image.height(); ++i)
-            for (auto j = 0; j < image.width(); ++j)
-                img.setPixel(j, (image.height()-1) - i, qRgb(image[i][j] * (255.0f / max), image[i][j] * (255.0f / max), image[i][j] * (255.0f / max)));
+            for (auto j = 0; j < image.width(); ++j) {
+                short buff = image[i][j];
+                switch (buff) {
+                case -2:
+                    img.setPixel(j, (image.height()-1) - i, qRgb(255,255,0));
+                    break;
+                case -5:
+                    img.setPixel(j, (image.height()-1) - i, qRgb(255, 255/2, 255));
+                    break;
+                case -7:
+                    img.setPixel(j, (image.height()-1) - i, qRgb(0, 255, 255));
+                    break;
+                default:
+                    if (std::fabs(image[i][j] - CENTRAL_VALUE) <= std::sqrt(AVERAGE_DISP_VALUE))
+                       img.setPixel(j, (image.height()-1) - i, qRgb(buff-(CENTRAL_VALUE - std::sqrt(AVERAGE_DISP_VALUE)) * (255.0f / (2*std::sqrt(AVERAGE_DISP_VALUE))),
+                                                                    buff-(CENTRAL_VALUE - std::sqrt(AVERAGE_DISP_VALUE)) * (255.0f / (2*std::sqrt(AVERAGE_DISP_VALUE))),
+                                                                    buff-(CENTRAL_VALUE - std::sqrt(AVERAGE_DISP_VALUE)) * (255.0f / (2*std::sqrt(AVERAGE_DISP_VALUE)))));
+                    else
+                       img.setPixel(j, (image.height()-1) - i, qRgb(0, 0, 0));
+                break;
+                }
+            }
+
+        //Levels init
+        levels->left(CENTRAL_VALUE - std::sqrt(AVERAGE_DISP_VALUE));
+        levels->right(CENTRAL_VALUE + std::sqrt(AVERAGE_DISP_VALUE));
+        levels->point_to_gist(&gist);
+        //
 
         scene->clear();
         ui->graphicsView->setScene(scene);
@@ -75,6 +122,7 @@ void MainWindow::on_actionOpen_triggered()
         //
         QImage img(image.width(), image.height(), QImage::Format::Format_RGB32);
 
+        gist.clear();
         short max = SHRT_MIN;
         for (auto i = 0; i < image.height(); ++i)
             for (auto j = 0; j < image.width(); ++j)
@@ -111,31 +159,31 @@ void MainWindow::on_actionCreate_template_triggered()
 {
     short** buff;
 
-    dialog.show();
-
-    if (dialog.exec() == QMessageBox::Cancel)
+    dialog->show();
+    if (dialog->exec() != QDialog::Accepted)
         return;
 
-    buff = new short* [dialog.height()];
-    for (unsigned short i = 0; i < dialog.height(); ++i)
-        buff[i] = new short [dialog.width()];
+    buff = new short* [dialog->height()];
+    for (unsigned short i = 0; i < dialog->height(); ++i)
+        buff[i] = new short [dialog->width()];
 
-    for (unsigned short i = 0; i < dialog.height(); ++i)
-        for (unsigned short j = 0; j < dialog.width(); ++j)
+    for (unsigned short i = 0; i < dialog->height(); ++i)
+        for (unsigned short j = 0; j < dialog->width(); ++j)
             buff[i][j] = 0x00;
 
-    image.copy(dialog.width(), dialog.height(), buff);
+    image.copy(dialog->width(), dialog->height(), buff);
 
-    for (unsigned short i = 0; i < dialog.height(); ++i)
+    for (unsigned short i = 0; i < dialog->height(); ++i)
         delete[] buff[i];
     delete[] buff;
 
-    image.setShapes(0, 0, image.width(), image.height(), dialog.radius(),
-                    dialog.space(), dialog.epsilon(), dialog.shape(), dialog.fill());
+    image.setShapes(0, 0, image.width(), image.height(), dialog->radius(),
+                    dialog->space(), dialog->epsilon(), dialog->shape(), dialog->fill());
 
     data_type = Ui::DATA_TYPE::IMG;
     QImage img(image.width(), image.height(), QImage::Format::Format_RGB32);
 
+    gist.clear();
     short max = SHRT_MIN;
     for (auto i = 0; i < image.height(); ++i)
         for (auto j = 0; j < image.width(); ++j)
@@ -174,4 +222,43 @@ void MainWindow::keyPressEvent(QKeyEvent* event) {
         default: break;
     }
     ui->label_zoom->setText(QString::number(zoom) + "%");
+}
+
+void MainWindow::on_actionLevels_triggered()
+{
+    levels->show();
+    if (levels->exec() != QDialog::Accepted)
+        return;
+
+    CENTRAL_VALUE = (levels->left() + levels->right())/2.0;
+    AVERAGE_DISP_VALUE = ((levels->right() - levels->left())/2)*((levels->right() - levels->left())/2);
+
+    QImage img(image.width(), image.height(), QImage::Format::Format_RGB32);
+
+    for (auto i = 0; i < image.height(); ++i)
+        for (auto j = 0; j < image.width(); ++j) {
+            short buff = image[i][j];
+            switch (buff) {
+            case -2:
+                img.setPixel(j, (image.height()-1) - i, qRgb(255,255,0));
+                break;
+            case -5:
+                img.setPixel(j, (image.height()-1) - i, qRgb(255, 255/2, 255));
+                break;
+            case -7:
+                img.setPixel(j, (image.height()-1) - i, qRgb(0, 255, 255));
+                break;
+            default:
+                if (std::fabs(image[i][j] - CENTRAL_VALUE) <= std::sqrt(AVERAGE_DISP_VALUE))
+                   img.setPixel(j, (image.height()-1) - i, qRgb(buff-(CENTRAL_VALUE - std::sqrt(AVERAGE_DISP_VALUE)) * (255.0f / (2*std::sqrt(AVERAGE_DISP_VALUE))),
+                                                                buff-(CENTRAL_VALUE - std::sqrt(AVERAGE_DISP_VALUE)) * (255.0f / (2*std::sqrt(AVERAGE_DISP_VALUE))),
+                                                                buff-(CENTRAL_VALUE - std::sqrt(AVERAGE_DISP_VALUE)) * (255.0f / (2*std::sqrt(AVERAGE_DISP_VALUE)))));
+                else
+                   img.setPixel(j, (image.height()-1) - i, qRgb(0, 0, 0));
+            break;
+            }
+        }
+
+    scene->addPixmap(QPixmap::fromImage(img));
+    ui->graphicsView->fitInView(scene->sceneRect(), Qt::KeepAspectRatio);
 }
