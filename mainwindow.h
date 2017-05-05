@@ -10,11 +10,13 @@
 #include <QPixmap>
 #include <QWheelEvent>
 #include <QLabel>
+#include <QAction>
 
 #include "inc/Satellite.hpp"
 
 #include "createimage.h"
 #include "levels.h"
+#include "vardialog.h"
 
 namespace Ui {
 
@@ -48,6 +50,8 @@ private slots:
 
     void on_actionLevels_triggered();
 
+    void on_actionCalc_triggered();
+
 private:
     Ui::MainWindow *ui;
 
@@ -55,6 +59,7 @@ private:
 
     CreateImage *dialog;
     Levels *levels;
+    varDialog *var_d;
 
     Ui::DATA_TYPE data_type;
 

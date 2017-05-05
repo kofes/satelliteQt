@@ -28,7 +28,8 @@ DEFINES += QT_DEPRECATED_WARNINGS
 SOURCES += main.cpp\
         mainwindow.cpp \
     createimage.cpp \
-    levels.cpp
+    levels.cpp \
+    vardialog.cpp
 
 HEADERS  += mainwindow.h \
     inc/Image.hpp \
@@ -36,11 +37,13 @@ HEADERS  += mainwindow.h \
     inc/Passport.hpp \
     inc/Satellite.hpp \
     createimage.h \
-    levels.h
+    levels.h \
+    vardialog.h
 
 FORMS    += mainwindow.ui \
     createimage.ui \
-    levels.ui
+    levels.ui \
+    vardialog.ui
 
 win32:CONFIG(release, debug|release): LIBS += -L$$PWD/inc/release/ -lsatellite
 else:win32:CONFIG(debug, debug|release): LIBS += -L$$PWD/inc/debug/ -lsatellite

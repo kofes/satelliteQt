@@ -9,6 +9,7 @@ MainWindow::MainWindow(QWidget *parent) :
     scene = new QGraphicsScene(this);
     levels = new Levels(this);
     dialog = new CreateImage(this);
+    var_d = new varDialog(this);
     data_type = Ui::DATA_TYPE::NONE;
     zoom = 0;
     MIN_ZOOM = 10;
@@ -21,6 +22,8 @@ MainWindow::~MainWindow()
     delete levels;
     dialog->close();
     delete dialog;
+    var_d->close();
+    delete var_d;
     delete scene;
     delete ui;
 }
@@ -37,6 +40,12 @@ void MainWindow::on_actionOpen_triggered()
         QMessageBox::critical(this, tr("Error"), tr("Could not open file"));
         return;
     }
+
+    //Actions disable
+    ui->actionLevels->setEnabled(false);
+    ui->actionCalc->setEnabled(false);
+    ui->actionShowExtremes->setEnabled(false);
+    //
 
     QFileInfo fileInfo(fileName);
     if (fileInfo.suffix() == "pro") {
@@ -103,7 +112,10 @@ void MainWindow::on_actionOpen_triggered()
         levels->right(CENTRAL_VALUE + std::sqrt(AVERAGE_DISP_VALUE));
         levels->point_to_gist(&gist);
         //
-
+        //Actions enable
+        ui->actionLevels->setEnabled(true);
+        ui->actionCalc->setEnabled(true);
+        //
         scene->clear();
         ui->graphicsView->setScene(scene);
         scene->setSceneRect(img.rect());
@@ -130,7 +142,9 @@ void MainWindow::on_actionOpen_triggered()
         for (auto i = 0; i < image.height(); ++i)
             for (auto j = 0; j < image.width(); ++j)
                 img.setPixel(j, i, qRgb(image[i][j] * (255.0f / max), image[i][j] * (255.0f / max), image[i][j] * (255.0f / max)));
-
+        //Actions enable
+        ui->actionCalc->setEnabled(true);
+        //
         scene->clear();
         ui->graphicsView->setScene(scene);
         scene->setSceneRect(img.rect());
@@ -261,4 +275,9 @@ void MainWindow::on_actionLevels_triggered()
 
     scene->addPixmap(QPixmap::fromImage(img));
     ui->graphicsView->fitInView(scene->sceneRect(), Qt::KeepAspectRatio);
+}
+
+void MainWindow::on_actionCalc_triggered()
+{
+    var_d->show();
 }

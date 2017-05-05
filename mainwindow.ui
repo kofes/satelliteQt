@@ -10,6 +10,12 @@
     <height>400</height>
    </rect>
   </property>
+  <property name="minimumSize">
+   <size>
+    <width>600</width>
+    <height>400</height>
+   </size>
+  </property>
   <property name="windowTitle">
    <string>MainWindow</string>
   </property>
@@ -17,20 +23,22 @@
    <locale language="English" country="UnitedStates"/>
   </property>
   <widget class="QWidget" name="centralWidget">
-   <layout class="QGridLayout" name="gridLayout">
-    <item row="1" column="7" alignment="Qt::AlignRight">
-     <widget class="QProgressBar" name="progressBar">
-      <property name="minimumSize">
-       <size>
-        <width>150</width>
-        <height>0</height>
-       </size>
-      </property>
-      <property name="value">
-       <number>0</number>
-      </property>
-     </widget>
-    </item>
+   <layout class="QGridLayout" name="gridLayout" columnstretch="0,0,0,0,1,0,0,0">
+    <property name="leftMargin">
+     <number>2</number>
+    </property>
+    <property name="topMargin">
+     <number>2</number>
+    </property>
+    <property name="rightMargin">
+     <number>2</number>
+    </property>
+    <property name="bottomMargin">
+     <number>2</number>
+    </property>
+    <property name="spacing">
+     <number>2</number>
+    </property>
     <item row="0" column="0" colspan="8">
      <widget class="QGraphicsView" name="graphicsView">
       <property name="dragMode">
@@ -41,19 +49,52 @@
       </property>
      </widget>
     </item>
-    <item row="1" column="5">
-     <widget class="QLabel" name="label_zoom">
-      <property name="text">
-       <string>0 %</string>
+    <item row="1" column="4" colspan="4">
+     <layout class="QHBoxLayout" name="horizontalLayout" stretch="0,1,1,0">
+      <property name="spacing">
+       <number>2</number>
       </property>
-     </widget>
-    </item>
-    <item row="1" column="4" alignment="Qt::AlignRight">
-     <widget class="QLabel" name="label_2">
-      <property name="text">
-       <string>Zoom: </string>
-      </property>
-     </widget>
+      <item>
+       <spacer name="horizontalSpacer_2">
+        <property name="orientation">
+         <enum>Qt::Horizontal</enum>
+        </property>
+        <property name="sizeHint" stdset="0">
+         <size>
+          <width>40</width>
+          <height>20</height>
+         </size>
+        </property>
+       </spacer>
+      </item>
+      <item alignment="Qt::AlignRight">
+       <widget class="QLabel" name="label_2">
+        <property name="text">
+         <string>Zoom: </string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QLabel" name="label_zoom">
+        <property name="text">
+         <string>0 %</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <spacer name="horizontalSpacer">
+        <property name="orientation">
+         <enum>Qt::Horizontal</enum>
+        </property>
+        <property name="sizeHint" stdset="0">
+         <size>
+          <width>40</width>
+          <height>20</height>
+         </size>
+        </property>
+       </spacer>
+      </item>
+     </layout>
     </item>
    </layout>
   </widget>
@@ -81,15 +122,13 @@
      <string>&amp;View</string>
     </property>
     <addaction name="actionShowExtremes"/>
-    <addaction name="actionColor"/>
     <addaction name="actionLevels"/>
    </widget>
-   <widget class="QMenu" name="menuCalculate">
+   <widget class="QMenu" name="menuTools">
     <property name="title">
-     <string>&amp;Calculate</string>
+     <string>&amp;Tools</string>
     </property>
-    <addaction name="actionSemivariance"/>
-    <addaction name="actionVariance"/>
+    <addaction name="actionCalc"/>
    </widget>
    <widget class="QMenu" name="menuHelp">
     <property name="title">
@@ -99,7 +138,7 @@
    </widget>
    <addaction name="menuFile"/>
    <addaction name="menuView"/>
-   <addaction name="menuCalculate"/>
+   <addaction name="menuTools"/>
    <addaction name="menuHelp"/>
   </widget>
   <action name="actionOpen">
@@ -118,6 +157,9 @@
    </property>
   </action>
   <action name="actionShowExtremes">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
    <property name="text">
     <string>Show &amp;extremes</string>
    </property>
@@ -127,9 +169,12 @@
     <string>Colo&amp;r</string>
    </property>
   </action>
-  <action name="actionSemivariance">
+  <action name="actionCalc">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
    <property name="text">
-    <string>Se&amp;mivariance</string>
+    <string>Ca&amp;lculate...</string>
    </property>
   </action>
   <action name="actionVariance">
@@ -148,6 +193,9 @@
    </property>
   </action>
   <action name="actionLevels">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
    <property name="text">
     <string>&amp;Levels</string>
    </property>
