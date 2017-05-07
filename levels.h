@@ -1,18 +1,7 @@
 #ifndef LEVELS_H
 #define LEVELS_H
 
-#include <QDialog>
-#include <QImage>
-#include <QColor>
-#include <QPixmap>
-#include <QPainter>
-#include <QLabel>
-#include <QLineEdit>
-#include <QRadioButton>
-#include <QValidator>
-#include <QDialogButtonBox>
-
-#include "inc/Satellite.hpp"
+#include "allin.hpp"
 
 namespace Ui {
 class Levels;

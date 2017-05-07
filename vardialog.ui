@@ -6,14 +6,32 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>375</width>
-    <height>207</height>
+    <width>420</width>
+    <height>320</height>
    </rect>
   </property>
-  <property name="windowTitle">
-   <string>Dialog</string>
+  <property name="sizePolicy">
+   <sizepolicy hsizetype="Maximum" vsizetype="Maximum">
+    <horstretch>0</horstretch>
+    <verstretch>0</verstretch>
+   </sizepolicy>
   </property>
-  <layout class="QGridLayout" name="gridLayout_3" rowstretch="0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0" columnstretch="0,0,0,0,5,20,5,0,0,0,0,0">
+  <property name="maximumSize">
+   <size>
+    <width>480</width>
+    <height>320</height>
+   </size>
+  </property>
+  <property name="windowTitle">
+   <string>Calculate</string>
+  </property>
+  <layout class="QVBoxLayout" name="verticalLayout">
+   <property name="spacing">
+    <number>2</number>
+   </property>
+   <property name="sizeConstraint">
+    <enum>QLayout::SetFixedSize</enum>
+   </property>
    <property name="leftMargin">
     <number>2</number>
    </property>
@@ -26,143 +44,167 @@
    <property name="bottomMargin">
     <number>2</number>
    </property>
-   <property name="spacing">
-    <number>2</number>
-   </property>
-   <item row="4" column="1">
-    <widget class="QLabel" name="label_6">
-     <property name="text">
-      <string>Log: </string>
-     </property>
-    </widget>
-   </item>
-   <item row="4" column="9">
-    <widget class="QComboBox" name="comboBox">
-     <item>
-      <property name="text">
-       <string>Variogram</string>
-      </property>
-     </item>
-     <item>
-      <property name="text">
-       <string>Variance</string>
-      </property>
-     </item>
-    </widget>
-   </item>
-   <item row="4" column="4">
-    <widget class="QLabel" name="label_5">
-     <property name="text">
-      <string>Function: </string>
-     </property>
-    </widget>
-   </item>
-   <item row="0" column="2">
-    <widget class="QLabel" name="label_8">
-     <property name="text">
-      <string>Top-Left</string>
-     </property>
-    </widget>
-   </item>
-   <item row="4" column="2">
-    <widget class="QLineEdit" name="lineEdit_3"/>
-   </item>
-   <item row="2" column="1" colspan="2">
-    <layout class="QGridLayout" name="gridLayout">
-     <item row="0" column="0">
-      <widget class="QLabel" name="label">
-       <property name="text">
-        <string>x</string>
-       </property>
-      </widget>
-     </item>
+   <item>
+    <layout class="QGridLayout" name="gridLayout_4" rowstretch="1,1,1" columnstretch="5,0,5">
      <item row="0" column="1">
-      <widget class="QLineEdit" name="line_top_left_x">
-       <property name="inputMethodHints">
-        <set>Qt::ImhDigitsOnly|Qt::ImhPreferNumbers</set>
+      <spacer name="horizontalSpacer">
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
        </property>
-      </widget>
-     </item>
-     <item row="2" column="0">
-      <widget class="QLabel" name="label_2">
-       <property name="text">
-        <string>y</string>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>40</width>
+         <height>20</height>
+        </size>
        </property>
-      </widget>
+      </spacer>
      </item>
-     <item row="2" column="1">
-      <widget class="QLineEdit" name="line_top_left_y"/>
-     </item>
-    </layout>
-   </item>
-   <item row="2" column="4">
-    <spacer name="horizontalSpacer">
-     <property name="orientation">
-      <enum>Qt::Horizontal</enum>
-     </property>
-     <property name="sizeHint" stdset="0">
-      <size>
-       <width>40</width>
-       <height>20</height>
-      </size>
-     </property>
-    </spacer>
-   </item>
-   <item row="2" column="9">
-    <layout class="QGridLayout" name="gridLayout_2">
-     <item row="1" column="0">
-      <widget class="QLabel" name="label_4">
-       <property name="text">
-        <string>y</string>
+     <item row="0" column="2">
+      <layout class="QGridLayout" name="gridLayout_2">
+       <property name="verticalSpacing">
+        <number>2</number>
        </property>
-      </widget>
+       <item row="2" column="0">
+        <widget class="QLabel" name="label_4">
+         <property name="text">
+          <string>y</string>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="0">
+        <widget class="QLabel" name="label_3">
+         <property name="text">
+          <string>x</string>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="1">
+        <widget class="QLineEdit" name="line_bottom_right_x">
+         <property name="inputMethodHints">
+          <set>Qt::ImhDigitsOnly|Qt::ImhPreferNumbers</set>
+         </property>
+        </widget>
+       </item>
+       <item row="2" column="1">
+        <widget class="QLineEdit" name="line_bottom_right_y">
+         <property name="inputMethodHints">
+          <set>Qt::ImhDigitsOnly|Qt::ImhPreferNumbers</set>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="0" colspan="2">
+        <widget class="QLabel" name="label_7">
+         <property name="text">
+          <string>Bottom-Right:</string>
+         </property>
+        </widget>
+       </item>
+      </layout>
      </item>
      <item row="0" column="0">
-      <widget class="QLabel" name="label_3">
-       <property name="text">
-        <string>x</string>
+      <layout class="QGridLayout" name="gridLayout" rowminimumheight="1,2,2,0">
+       <property name="horizontalSpacing">
+        <number>6</number>
        </property>
-      </widget>
-     </item>
-     <item row="0" column="1">
-      <widget class="QLineEdit" name="line_botttom_right_x"/>
+       <property name="verticalSpacing">
+        <number>2</number>
+       </property>
+       <item row="1" column="0">
+        <widget class="QLabel" name="label">
+         <property name="text">
+          <string>x</string>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="1">
+        <widget class="QLineEdit" name="line_top_left_x">
+         <property name="inputMethodHints">
+          <set>Qt::ImhDigitsOnly|Qt::ImhPreferNumbers</set>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="0" colspan="2">
+        <widget class="QLabel" name="label_8">
+         <property name="text">
+          <string>Top-Left:</string>
+         </property>
+        </widget>
+       </item>
+       <item row="2" column="1">
+        <widget class="QLineEdit" name="line_top_left_y">
+         <property name="inputMethodHints">
+          <set>Qt::ImhDigitsOnly|Qt::ImhPreferNumbers</set>
+         </property>
+        </widget>
+       </item>
+       <item row="2" column="0">
+        <widget class="QLabel" name="label_2">
+         <property name="text">
+          <string>y</string>
+         </property>
+        </widget>
+       </item>
+      </layout>
      </item>
      <item row="1" column="1">
-      <widget class="QLineEdit" name="line_botttom_right_y"/>
+      <spacer name="verticalSpacer_2">
+       <property name="orientation">
+        <enum>Qt::Vertical</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>20</width>
+         <height>40</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+     <item row="2" column="0">
+      <layout class="QHBoxLayout" name="horizontalLayout_2">
+       <item>
+        <widget class="QLabel" name="label_6">
+         <property name="text">
+          <string>Log: </string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLineEdit" name="line_log">
+         <property name="inputMethodHints">
+          <set>Qt::ImhDigitsOnly|Qt::ImhPreferNumbers</set>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </item>
+     <item row="2" column="2">
+      <layout class="QHBoxLayout" name="horizontalLayout">
+       <item>
+        <widget class="QLabel" name="label_5">
+         <property name="text">
+          <string>Function: </string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QComboBox" name="comboBox">
+         <item>
+          <property name="text">
+           <string>Variogram</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>Variance</string>
+          </property>
+         </item>
+        </widget>
+       </item>
+      </layout>
      </item>
     </layout>
    </item>
-   <item row="0" column="9">
-    <widget class="QLabel" name="label_7">
-     <property name="text">
-      <string>Bottom-Right</string>
-     </property>
-    </widget>
-   </item>
-   <item row="3" column="9">
-    <spacer name="verticalSpacer_2">
-     <property name="orientation">
-      <enum>Qt::Vertical</enum>
-     </property>
-     <property name="sizeHint" stdset="0">
-      <size>
-       <width>20</width>
-       <height>40</height>
-      </size>
-     </property>
-    </spacer>
-   </item>
-   <item row="6" column="9">
-    <widget class="QDialogButtonBox" name="buttonBox">
-     <property name="orientation">
-      <enum>Qt::Horizontal</enum>
-     </property>
-     <property name="standardButtons">
-      <set>QDialogButtonBox::Cancel|QDialogButtonBox::Ok</set>
-     </property>
-    </widget>
-   </item>
-   <item row="5" column="9">
+   <item>
     <spacer name="verticalSpacer">
      <property name="orientation">
       <enum>Qt::Vertical</enum>
@@ -174,6 +216,38 @@
       </size>
      </property>
     </spacer>
+   </item>
+   <item>
+    <widget class="QProgressBar" name="progressBar">
+     <property name="sizePolicy">
+      <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+       <horstretch>0</horstretch>
+       <verstretch>0</verstretch>
+      </sizepolicy>
+     </property>
+     <property name="layoutDirection">
+      <enum>Qt::LeftToRight</enum>
+     </property>
+     <property name="autoFillBackground">
+      <bool>false</bool>
+     </property>
+     <property name="value">
+      <number>0</number>
+     </property>
+     <property name="alignment">
+      <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <widget class="QDialogButtonBox" name="buttonBox">
+     <property name="orientation">
+      <enum>Qt::Horizontal</enum>
+     </property>
+     <property name="standardButtons">
+      <set>QDialogButtonBox::Abort|QDialogButtonBox::Cancel|QDialogButtonBox::Ok</set>
+     </property>
+    </widget>
    </item>
   </layout>
  </widget>

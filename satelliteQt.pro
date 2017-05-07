@@ -8,7 +8,7 @@ QT       += core gui
 
 CONFIG += c++11
 
-greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
+greaterThan(QT_MAJOR_VERSION, 4): QT += widgets printsupport
 
 TARGET = satelliteQt
 TEMPLATE = app
@@ -29,7 +29,9 @@ SOURCES += main.cpp\
         mainwindow.cpp \
     createimage.cpp \
     levels.cpp \
-    vardialog.cpp
+    vardialog.cpp \
+    qcustomplot.cpp \
+    graphic.cpp
 
 HEADERS  += mainwindow.h \
     inc/Image.hpp \
@@ -38,12 +40,16 @@ HEADERS  += mainwindow.h \
     inc/Satellite.hpp \
     createimage.h \
     levels.h \
-    vardialog.h
+    vardialog.h \
+    qcustomplot.h \
+    graphic.h \
+    allin.hpp
 
 FORMS    += mainwindow.ui \
     createimage.ui \
     levels.ui \
-    vardialog.ui
+    vardialog.ui \
+    graphic.ui
 
 win32:CONFIG(release, debug|release): LIBS += -L$$PWD/inc/release/ -lsatellite
 else:win32:CONFIG(debug, debug|release): LIBS += -L$$PWD/inc/debug/ -lsatellite

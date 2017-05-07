@@ -10,6 +10,7 @@ MainWindow::MainWindow(QWidget *parent) :
     levels = new Levels(this);
     dialog = new CreateImage(this);
     var_d = new varDialog(this);
+    graphic = new Graphic(this);
     data_type = Ui::DATA_TYPE::NONE;
     zoom = 0;
     MIN_ZOOM = 10;
@@ -24,6 +25,8 @@ MainWindow::~MainWindow()
     delete dialog;
     var_d->close();
     delete var_d;
+    graphic->close();
+    delete graphic;
     delete scene;
     delete ui;
 }
@@ -279,5 +282,10 @@ void MainWindow::on_actionLevels_triggered()
 
 void MainWindow::on_actionCalc_triggered()
 {
+    var_d->setImage(&image);
     var_d->show();
+    if (var_d->exec() == QDialog::Rejected)
+        return;
+    graphic->setVar(var_d->var(), var_d->dh());
+    graphic->show();
 }

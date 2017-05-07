@@ -17,7 +17,7 @@
    </size>
   </property>
   <property name="windowTitle">
-   <string>MainWindow</string>
+   <string>VarSatellite</string>
   </property>
   <property name="locale">
    <locale language="English" country="UnitedStates"/>
@@ -121,7 +121,6 @@
     <property name="title">
      <string>&amp;View</string>
     </property>
-    <addaction name="actionShowExtremes"/>
     <addaction name="actionLevels"/>
    </widget>
    <widget class="QMenu" name="menuTools">

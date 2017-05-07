@@ -1,13 +1,7 @@
 #ifndef CREATEIMAGE_H
 #define CREATEIMAGE_H
 
-#include <QDialog>
-#include <QComboBox>
-#include <QSpinBox>
-#include <QDoubleSpinBox>
-#include <QCheckBox>
-
-#include "inc/Satellite.hpp"
+#include "allin.hpp"
 
 namespace Ui {
 class CreateImage;

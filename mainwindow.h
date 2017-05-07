@@ -1,22 +1,12 @@
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 
-#include <QMainWindow>
-#include <QFileDialog>
-#include <QMessageBox>
-#include <QGraphicsView>
-#include <QImage>
-#include <QColor>
-#include <QPixmap>
-#include <QWheelEvent>
-#include <QLabel>
-#include <QAction>
-
-#include "inc/Satellite.hpp"
+#include "allin.hpp"
 
 #include "createimage.h"
 #include "levels.h"
 #include "vardialog.h"
+#include "graphic.h"
 
 namespace Ui {
 
@@ -60,6 +50,7 @@ private:
     CreateImage *dialog;
     Levels *levels;
     varDialog *var_d;
+    Graphic *graphic;
 
     Ui::DATA_TYPE data_type;
 
