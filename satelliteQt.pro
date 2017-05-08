@@ -51,9 +51,9 @@ FORMS    += mainwindow.ui \
     vardialog.ui \
     graphic.ui
 
-win32:CONFIG(release, debug|release): LIBS += -L$$PWD/inc/release/ -lsatellite
-else:win32:CONFIG(debug, debug|release): LIBS += -L$$PWD/inc/debug/ -lsatellite
-else:unix: LIBS += -L$$PWD/inc/ -lsatellite
+win32:CONFIG(release, debug|release): LIBS += -L$$PWD/./release/ -lsatellite
+else:win32:CONFIG(debug, debug|release): LIBS += -L$$PWD/./debug/ -lsatellite
+else:unix: LIBS += -L$$PWD/./ -lsatellite
 
-INCLUDEPATH += $$PWD/inc
-DEPENDPATH += $$PWD/inc
+INCLUDEPATH += $$PWD/.
+DEPENDPATH += $$PWD/.
