@@ -23,6 +23,10 @@
 #include <QAction>
 #include <QProgressBar>
 #include <QThreadPool>
+#include <QFutureWatcher>
+#include <QFuture>
+#include <QtConcurrent/QtConcurrent>
+#include <QPushButton>
 
 #include <QDebug>
 

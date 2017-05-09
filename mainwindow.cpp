@@ -157,7 +157,19 @@ void MainWindow::on_actionOpen_triggered()
         ui->label_zoom->setText(QString::number(zoom) + "%");
         return;
     }
-    //TODO: VAR FILES!
+    if (fileInfo.suffix() == "var") {
+        std::vector<double> var;
+        double dh;
+        unsigned long size;
+        file >> size >> dh;
+        for (unsigned long i = 0; i < size; ++i) {
+            double buff;
+            file >> buff;
+            var.push_back(buff);
+        }
+        graphic->setVar(var, dh);
+        graphic->show();
+    }
 }
 
 void MainWindow::on_actionQuit_triggered()
@@ -205,6 +217,9 @@ void MainWindow::on_actionCreate_template_triggered()
     for (auto i = 0; i < image.height(); ++i)
         for (auto j = 0; j < image.width(); ++j)
             max = (max > image[i][j]) ? max : image[i][j];
+
+    MIN_VALUE = 0;
+    MAX_VALUE = max;
 
     for (auto i = 0; i < image.height(); ++i)
         for (auto j = 0; j < image.width(); ++j)
@@ -282,7 +297,12 @@ void MainWindow::on_actionLevels_triggered()
 
 void MainWindow::on_actionCalc_triggered()
 {
-    var_d->setImage(&image);
+    satellite::Image tmp(image);
+    tmp.changeMaxMin(
+                (CENTRAL_VALUE - std::sqrt(AVERAGE_DISP_VALUE) > 0) ? (CENTRAL_VALUE - std::sqrt(AVERAGE_DISP_VALUE)) : 0,
+                (CENTRAL_VALUE + std::sqrt(AVERAGE_DISP_VALUE) < MAX_VALUE) ? (CENTRAL_VALUE + std::sqrt(AVERAGE_DISP_VALUE)) : MAX_VALUE
+                    );
+    var_d->setImage(&tmp);
     var_d->show();
     if (var_d->exec() == QDialog::Rejected)
         return;

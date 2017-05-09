@@ -17,8 +17,14 @@ public:
 
     void setVar(const std::vector<double>& src, double dh);
 
+private slots:
+    void on_buttonBox_clicked(QAbstractButton *button);
+
 private:
     Ui::Graphic *ui;
+
+    std::vector<double> func;
+    double _dh;
 };
 
 #endif // GRAPHIC_H

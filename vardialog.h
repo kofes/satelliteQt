@@ -3,6 +3,8 @@
 
 #include "allin.hpp"
 
+#include "calculation.h"
+
 namespace Ui {
 class varDialog;
 }
@@ -21,15 +23,31 @@ public:
 
     std::vector<double> var();
 
+public slots:
+    void slot_finished();
+
 private slots:
     void on_buttonBox_clicked(QAbstractButton *button);
 
+    void on_buttonBox_rejected();
+
+signals:
+    void abort(bool);
+
 private:
+
+    void reset(bool flag);
+
     Ui::varDialog *ui;
 
     satellite::Image *image;
 
     std::vector<double> func;
+
+    Calculation cl;
+    QFutureWatcher<void> fw;
+
+    bool _cancel_flag;
 };
 
 #endif // VARDIALOG_H

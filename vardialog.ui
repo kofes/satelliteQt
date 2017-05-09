@@ -102,7 +102,7 @@
       </layout>
      </item>
      <item row="0" column="0">
-      <layout class="QGridLayout" name="gridLayout" rowminimumheight="1,2,2,0">
+      <layout class="QGridLayout" name="gridLayout" rowminimumheight="1,2,2">
        <property name="horizontalSpacing">
         <number>6</number>
        </property>
@@ -235,7 +235,7 @@
       <number>0</number>
      </property>
      <property name="alignment">
-      <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+      <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
      </property>
     </widget>
    </item>
@@ -245,7 +245,10 @@
       <enum>Qt::Horizontal</enum>
      </property>
      <property name="standardButtons">
-      <set>QDialogButtonBox::Abort|QDialogButtonBox::Cancel|QDialogButtonBox::Ok</set>
+      <set>QDialogButtonBox::Abort|QDialogButtonBox::Apply|QDialogButtonBox::Cancel</set>
+     </property>
+     <property name="centerButtons">
+      <bool>false</bool>
      </property>
     </widget>
    </item>
@@ -265,22 +268,6 @@
     </hint>
     <hint type="destinationlabel">
      <x>157</x>
-     <y>274</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>buttonBox</sender>
-   <signal>rejected()</signal>
-   <receiver>varDialog</receiver>
-   <slot>reject()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>316</x>
-     <y>260</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>286</x>
      <y>274</y>
     </hint>
    </hints>

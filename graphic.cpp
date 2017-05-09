@@ -14,6 +14,8 @@ Graphic::~Graphic()
 }
 
 void Graphic::setVar(const std::vector<double>& src, double dh) {
+    func = src;
+    _dh = dh;
     QVector<double> x, y;
     x.resize(src.size());
     y.resize(src.size());
@@ -43,4 +45,23 @@ void Graphic::setVar(const std::vector<double>& src, double dh) {
     ui->widget->yAxis->setRange(minY, maxY);//Для оси Oy
 
     ui->widget->replot();
+}
+
+void Graphic::on_buttonBox_clicked(QAbstractButton *button)
+{
+    if (ui->buttonBox->standardButton(button) == QDialogButtonBox::Save) {
+        QString fileName = QFileDialog::getSaveFileName(this, tr("Save File"), "",
+                                                        tr("Var files (*.var);;All Files (*)"));
+        if (fileName.isEmpty())
+            return;
+        std::ofstream file(fileName.toStdString());
+        if (!file.is_open()) {
+            QMessageBox::critical(this, tr("Error"), tr("Could not open file"));
+            return;
+        }
+        file << func.size() << '\n';
+        file << _dh << '\n';
+        for (unsigned int i = 0; i < func.size(); ++i)
+            file << func[i] << '\n';
+    }
 }

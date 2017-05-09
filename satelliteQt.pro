@@ -31,7 +31,8 @@ SOURCES += main.cpp\
     levels.cpp \
     vardialog.cpp \
     qcustomplot.cpp \
-    graphic.cpp
+    graphic.cpp \
+    calculation.cpp
 
 HEADERS  += mainwindow.h \
     inc/Image.hpp \
@@ -43,7 +44,8 @@ HEADERS  += mainwindow.h \
     vardialog.h \
     qcustomplot.h \
     graphic.h \
-    allin.hpp
+    allin.hpp \
+    calculation.h
 
 FORMS    += mainwindow.ui \
     createimage.ui \

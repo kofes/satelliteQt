@@ -6,6 +6,11 @@ varDialog::varDialog(QWidget *parent) :
     ui(new Ui::varDialog)
 {
     ui->setupUi(this);
+    connect(&this->fw, SIGNAL(finished()), this, SLOT(slot_finished()));
+    connect(&this->cl, SIGNAL(signal_progress(int)), ui->progressBar, SLOT(setValue(int)));
+    connect(this, SIGNAL(abort(bool)), &this->cl, SLOT(abort(bool)));
+    ui->buttonBox->button(QDialogButtonBox::Abort)->setEnabled(false);
+    _cancel_flag = false;
 }
 
 varDialog::~varDialog()
@@ -44,21 +49,55 @@ std::vector<double> varDialog::var() {
 
 void varDialog::on_buttonBox_clicked(QAbstractButton *button)
 {
-    if (ui->buttonBox->standardButton(button) == QDialogButtonBox::Ok) {
-        double h = 0, dh = ui->line_log->text().toDouble();
+    if (ui->buttonBox->standardButton(button) == QDialogButtonBox::Apply) {
+
+        button->setCheckable(false);
         unsigned short width = std::abs(ui->line_top_left_x->text().toDouble() - ui->line_bottom_right_x->text().toDouble()),
                        height = std::abs(ui->line_top_left_y->text().toDouble() - ui->line_bottom_right_y->text().toDouble());
-        while (h < std::sqrt(width*width + height*height)) {
-            func.push_back(satellite::math::g(
-                               ui->line_top_left_x->text().toShort(),
-                               ui->line_top_left_y->text().toShort(),
-                               ui->line_bottom_right_x->text().toShort(),
-                               ui->line_bottom_right_y->text().toShort(),
-                               h,
-                               *image
-                               ));
-            h += dh;
-            ui->progressBar->setValue(h/std::sqrt(width*width+height*height) * 100);
-        }
+        cl.set(
+                    &func,
+                    ui->line_top_left_x->text().toDouble(),
+                    ui->line_top_left_y->text().toDouble(),
+                    width,
+                    height,
+                    ui->line_log->text().toDouble(),
+                    image
+               );
+        QFuture<void> future = QtConcurrent::run(&this->cl, &Calculation::operator ());
+        fw.setFuture(future);
+        reset(false);
+        return;
     }
+    if (ui->buttonBox->standardButton(button) == QDialogButtonBox::Cancel)
+        _cancel_flag = true;
+    reset(true);
+    abort(true);
+}
+
+void varDialog::slot_finished(){
+    ui->progressBar->setValue(0);
+    if (!ui->buttonBox->button(QDialogButtonBox::Apply)->isEnabled()) {
+        reset(true);
+        this->done(QDialogButtonBox::Ok);
+    }
+}
+
+void varDialog::on_buttonBox_rejected()
+{
+    if (_cancel_flag) {
+        _cancel_flag = false;
+        fw.waitForFinished();
+        reject();
+    }
+}
+
+void varDialog::reset(bool flag) {
+    ui->buttonBox->button(QDialogButtonBox::Apply)->setEnabled(flag);
+    ui->buttonBox->button(QDialogButtonBox::Abort)->setEnabled(!flag);
+    ui->comboBox->setEnabled(flag);
+    ui->line_bottom_right_x->setEnabled(flag);
+    ui->line_bottom_right_y->setEnabled(flag);
+    ui->line_log->setEnabled(flag);
+    ui->line_top_left_x->setEnabled(flag);
+    ui->line_top_left_y->setEnabled(flag);
 }
