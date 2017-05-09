@@ -57,11 +57,6 @@ private:
     satellite::passport::Proection passport;
     satellite::Image image;
 
-    std::vector< std::pair<double, unsigned long> > gist;
-
-    short MIN_VALUE, MAX_VALUE;
-    double CENTRAL_VALUE, AVERAGE_DISP_VALUE;
-
     double MIN_ZOOM, MAX_ZOOM;
     double zoom;
 };

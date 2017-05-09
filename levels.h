@@ -20,13 +20,12 @@ public:
     explicit Levels(QWidget *parent = 0);
     ~Levels();
 
-    void point_to_gist(std::vector< std::pair<double, unsigned long int> >* gist);
+    void init(satellite::Image& img);
 
-    long left();
-    long right();
+    short left();
+    short right();
+    short max();
 
-    void left(long _l);
-    void right(long _r);
 private slots:
     void on_radio_button_raw_clicked();
 
@@ -43,16 +42,17 @@ private slots:
     void on_radio_button_cloud_clicked();
 
 private:
-    double sum_before(long& end);
+    void uncheck_radio();
+
+    double sum_before(short& end);
     unsigned long ind_before(double& end);
 
     Ui::Levels *ui;
 
     QPixmap pxm;
 
-    std::vector< std::pair<double, unsigned long> >* _gist;
-    long _left, _right, dx;
-
+    std::vector< std::pair<double, unsigned long> > _gist;
+    short _max_val, _left, _right, dx;
     double _sum;
 
     Unit unit;

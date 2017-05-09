@@ -35,7 +35,7 @@ void MainWindow::on_actionOpen_triggered()
 {
     QString fileName = QFileDialog::getOpenFileName(this, tr("Open File"), "",
                                                     tr("lab34 files (*.pro);;Var files (*.var);;Generated images (*.img)"));
-    if (fileName == "")
+    if (fileName.isEmpty())
         return;
 
     std::ifstream file(fileName.toStdString());
@@ -48,6 +48,7 @@ void MainWindow::on_actionOpen_triggered()
     ui->actionLevels->setEnabled(false);
     ui->actionCalc->setEnabled(false);
     ui->actionShowExtremes->setEnabled(false);
+    ui->actionSave->setEnabled(false);
     //
 
     QFileInfo fileInfo(fileName);
@@ -55,37 +56,28 @@ void MainWindow::on_actionOpen_triggered()
         satellite::passport::Proection pass;
         file >> pass;
 
-        if (pass.DATA_TYPE[0] != (uint8_t)(satellite::passport::DATA_TYPE::PROECTION))
+        if (pass.DATA_TYPE[0] != (uint8_t)(satellite::passport::DATA_TYPE::PROECTION)) {
             QMessageBox::critical(this, tr("Error"), tr("Image isn't proection"));
+            file.close();
+            return;
+        }
+
+        data_type = Ui::DATA_TYPE::PRO;
 
         passport = pass;
 
-        data_type = Ui::DATA_TYPE::PRO;
         image.read(passport.getCountPixelsInLine(), passport.getCountLines(), file);
 
+        levels->init(image);
         QImage img(image.width(), image.height(), QImage::Format::Format_RGB32);
 
-        MAX_VALUE = MIN_VALUE = 0;
-        for (auto i = 0; i < image.height(); ++i)
-            for (auto j = 0; j < image.width(); ++j)
-                MAX_VALUE = (MAX_VALUE > image[i][j]) ? MAX_VALUE : image[i][j];
+        std::cout << levels->max() << '\n'
+                  << (levels->right()+levels->left())/2 << " : "
+                  << (levels->right()-levels->left())/2
+                  << std::endl;
 
-        gist.clear();
-        gist.resize(MAX_VALUE-MIN_VALUE+1, std::make_pair(0, 0));
-
-        for (int i = 0; i < image.height(); ++i)
-            for (int j = 0; j < image.width(); ++j)
-                if (image[i][j] > 0) {
-                    gist[image[i][j]].first = image[i][j];
-                    gist[image[i][j]].second++;
-                }
-
-        CENTRAL_VALUE = satellite::math::first_row_moment(gist);
-        AVERAGE_DISP_VALUE = satellite::math::central_moment(gist);
-
-        std::cout << gist.size() << std::endl;
-        std::cout << CENTRAL_VALUE << " : " << std::sqrt(AVERAGE_DISP_VALUE) << std::endl;
-
+        double left = levels->left(),
+               right = levels->right();
         for (auto i = 0; i < image.height(); ++i)
             for (auto j = 0; j < image.width(); ++j) {
                 short buff = image[i][j];
@@ -100,21 +92,16 @@ void MainWindow::on_actionOpen_triggered()
                     img.setPixel(j, (image.height()-1) - i, qRgb(0, 255, 255));
                     break;
                 default:
-                    if (std::fabs(image[i][j] - CENTRAL_VALUE) <= std::sqrt(AVERAGE_DISP_VALUE))
-                       img.setPixel(j, (image.height()-1) - i, qRgb(buff-(CENTRAL_VALUE - std::sqrt(AVERAGE_DISP_VALUE)) * (255.0f / (2*std::sqrt(AVERAGE_DISP_VALUE))),
-                                                                    buff-(CENTRAL_VALUE - std::sqrt(AVERAGE_DISP_VALUE)) * (255.0f / (2*std::sqrt(AVERAGE_DISP_VALUE))),
-                                                                    buff-(CENTRAL_VALUE - std::sqrt(AVERAGE_DISP_VALUE)) * (255.0f / (2*std::sqrt(AVERAGE_DISP_VALUE)))));
+                    if (image[i][j] <= right && image[i][j] >= left)
+                       img.setPixel(j, (image.height()-1) - i, qRgb(buff-left * (255.0f / ((right-left))),
+                                                                    buff-left * (255.0f / ((right-left))),
+                                                                    buff-left * (255.0f / ((right-left)))));
                     else
                        img.setPixel(j, (image.height()-1) - i, qRgb(0, 0, 0));
                 break;
                 }
             }
 
-        //Levels init
-        levels->left(CENTRAL_VALUE - std::sqrt(AVERAGE_DISP_VALUE));
-        levels->right(CENTRAL_VALUE + std::sqrt(AVERAGE_DISP_VALUE));
-        levels->point_to_gist(&gist);
-        //
         //Actions enable
         ui->actionLevels->setEnabled(true);
         ui->actionCalc->setEnabled(true);
@@ -130,21 +117,20 @@ void MainWindow::on_actionOpen_triggered()
     }
     if (fileInfo.suffix() == "img") {
         unsigned short width, height;
+
+        data_type = Ui::DATA_TYPE::IMG;
+
         file.read(reinterpret_cast<char *>(&height), sizeof(height));
         file.read(reinterpret_cast<char *>(&width), sizeof(width));
         image.read(width, height, file);
-        data_type = Ui::DATA_TYPE::IMG;
+        levels->init(image);
         //
         QImage img(image.width(), image.height(), QImage::Format::Format_RGB32);
 
-        gist.clear();
-        short max = SHRT_MIN;
         for (auto i = 0; i < image.height(); ++i)
             for (auto j = 0; j < image.width(); ++j)
-                max = (max > image[i][j]) ? max : image[i][j];
-        for (auto i = 0; i < image.height(); ++i)
-            for (auto j = 0; j < image.width(); ++j)
-                img.setPixel(j, i, qRgb(image[i][j] * (255.0f / max), image[i][j] * (255.0f / max), image[i][j] * (255.0f / max)));
+                img.setPixel(j, i, qRgb(image[i][j] * (255.0f / levels->max()), image[i][j] * (255.0f / levels->max()), image[i][j] * (255.0f / levels->max())));
+
         //Actions enable
         ui->actionCalc->setEnabled(true);
         //
@@ -212,18 +198,11 @@ void MainWindow::on_actionCreate_template_triggered()
     data_type = Ui::DATA_TYPE::IMG;
     QImage img(image.width(), image.height(), QImage::Format::Format_RGB32);
 
-    gist.clear();
-    short max = SHRT_MIN;
-    for (auto i = 0; i < image.height(); ++i)
-        for (auto j = 0; j < image.width(); ++j)
-            max = (max > image[i][j]) ? max : image[i][j];
-
-    MIN_VALUE = 0;
-    MAX_VALUE = max;
+    levels->init(image);
 
     for (auto i = 0; i < image.height(); ++i)
         for (auto j = 0; j < image.width(); ++j)
-            img.setPixel(j, i, qRgb(image[i][j] * (255.0f / max), image[i][j] * (255.0f / max), image[i][j] * (255.0f / max)));
+            img.setPixel(j, i, qRgb(image[i][j] * (255.0f / levels->max()), image[i][j] * (255.0f / levels->max()), image[i][j] * (255.0f / levels->max())));
 
     scene->clear();
     ui->graphicsView->setScene(scene);
@@ -262,10 +241,10 @@ void MainWindow::on_actionLevels_triggered()
     if (levels->exec() != QDialog::Accepted)
         return;
 
-    CENTRAL_VALUE = (levels->left() + levels->right())/2.0;
-    AVERAGE_DISP_VALUE = ((levels->right() - levels->left())/2)*((levels->right() - levels->left())/2);
-
     QImage img(image.width(), image.height(), QImage::Format::Format_RGB32);
+
+    double left = levels->left(),
+           right = levels->right();
 
     for (auto i = 0; i < image.height(); ++i)
         for (auto j = 0; j < image.width(); ++j) {
@@ -281,10 +260,10 @@ void MainWindow::on_actionLevels_triggered()
                 img.setPixel(j, (image.height()-1) - i, qRgb(0, 255, 255));
                 break;
             default:
-                if (std::fabs(image[i][j] - CENTRAL_VALUE) <= std::sqrt(AVERAGE_DISP_VALUE))
-                   img.setPixel(j, (image.height()-1) - i, qRgb(buff-(CENTRAL_VALUE - std::sqrt(AVERAGE_DISP_VALUE)) * (255.0f / (2*std::sqrt(AVERAGE_DISP_VALUE))),
-                                                                buff-(CENTRAL_VALUE - std::sqrt(AVERAGE_DISP_VALUE)) * (255.0f / (2*std::sqrt(AVERAGE_DISP_VALUE))),
-                                                                buff-(CENTRAL_VALUE - std::sqrt(AVERAGE_DISP_VALUE)) * (255.0f / (2*std::sqrt(AVERAGE_DISP_VALUE)))));
+                if (image[i][j] <= right && image[i][j] >= left)
+                   img.setPixel(j, (image.height()-1) - i, qRgb(buff-left * (255.0f / ((right-left))),
+                                                                buff-left * (255.0f / ((right-left))),
+                                                                buff-left * (255.0f / ((right-left)))));
                 else
                    img.setPixel(j, (image.height()-1) - i, qRgb(0, 0, 0));
             break;
@@ -298,10 +277,7 @@ void MainWindow::on_actionLevels_triggered()
 void MainWindow::on_actionCalc_triggered()
 {
     satellite::Image tmp(image);
-    tmp.changeMaxMin(
-                (CENTRAL_VALUE - std::sqrt(AVERAGE_DISP_VALUE) > 0) ? (CENTRAL_VALUE - std::sqrt(AVERAGE_DISP_VALUE)) : 0,
-                (CENTRAL_VALUE + std::sqrt(AVERAGE_DISP_VALUE) < MAX_VALUE) ? (CENTRAL_VALUE + std::sqrt(AVERAGE_DISP_VALUE)) : MAX_VALUE
-                    );
+    tmp.changeMaxMin(levels->left(), levels->right());
     var_d->setImage(&tmp);
     var_d->show();
     if (var_d->exec() == QDialog::Rejected)
