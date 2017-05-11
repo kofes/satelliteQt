@@ -71,9 +71,10 @@ void varDialog::on_buttonBox_clicked(QAbstractButton *button) {
         cl.set(
                     &func,
                     ui->line_top_left_x->text().toDouble(),
-                    (_type == Ui::DATA_TYPE::IMG) ?
-                        ui->line_top_left_y->text().toDouble()
-                      : image->height() - ui->line_bottom_right_y->text().toDouble()-1,
+                    (_type == Ui::DATA_TYPE::PRO) ?
+                        image->height() - ui->line_bottom_right_y->text().toDouble()-1
+                      :
+                        ui->line_top_left_y->text().toDouble(),
                     width,
                     height,
                     ui->line_log->text().toDouble(),

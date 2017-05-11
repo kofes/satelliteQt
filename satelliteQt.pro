@@ -32,7 +32,10 @@ SOURCES += main.cpp\
     vardialog.cpp \
     qcustomplot.cpp \
     graphic.cpp \
-    calculation.cpp
+    calculation.cpp \
+    src/Image.cpp \
+    src/Math.cpp \
+    src/Passport.cpp
 
 HEADERS  += mainwindow.h \
     inc/Image.hpp \
@@ -53,9 +56,9 @@ FORMS    += mainwindow.ui \
     vardialog.ui \
     graphic.ui
 
-win32:CONFIG(release, debug|release): LIBS += -L$$PWD/./release/ -lsatellite
-else:win32:CONFIG(debug, debug|release): LIBS += -L$$PWD/./debug/ -lsatellite
-else:unix: LIBS += -L$$PWD/./ -lsatellite
+#win32:CONFIG(release, debug|release): LIBS += -L$$PWD/./release/ -lsatellite
+#else:win32:CONFIG(debug, debug|release): LIBS += -L$$PWD/./debug/ -lsatellite
+#else:unix: LIBS += -L$$PWD/./ -lsatellite
 
-INCLUDEPATH += $$PWD/.
-DEPENDPATH += $$PWD/.
+#INCLUDEPATH += $$PWD/.
+#DEPENDPATH += $$PWD/.

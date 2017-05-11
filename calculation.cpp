@@ -28,6 +28,7 @@ void Calculation::set(std::vector<double>* _f, short x, short y, short dx, short
 
 void Calculation::operator ()() {
     double h = 0;
+    std::cout << _x << ':' << _x + _dx << ':' << _y << ':' << _y + _dy << std::endl;
     switch (_type) {
         case (Calc_type::VARIOGRAM):
             while (!flag && h < std::sqrt(_dx*_dx + _dy*_dy)) {

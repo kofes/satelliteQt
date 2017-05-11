@@ -141,10 +141,10 @@ void MainWindow::on_actionOpen_triggered()
                 img.setPixel(j, i, qRgb(image[i][j] * (255.0f / levels->max()), image[i][j] * (255.0f / levels->max()), image[i][j] * (255.0f / levels->max())));
 
         //Actions disable
-        ui->actionLevels->setEnabled(false);
         ui->actionSave->setEnabled(false);
         //
         //Actions enable
+        ui->actionLevels->setEnabled(true);
         ui->actionCalc->setEnabled(true);
         //
         scene->clear();
@@ -187,15 +187,9 @@ void MainWindow::on_actionCreate_template_triggered()
 {
     short** buff;
 
-    //Actions disable
-    ui->actionCreate_template->setEnabled(false);
-    //
-    dialog->show();
     if (dialog->exec() != QDialog::Accepted)
         return;
-    //Actions enable
-    ui->actionCreate_template->setEnabled(true);
-    //
+
     buff = new short* [dialog->height()];
     for (unsigned short i = 0; i < dialog->height(); ++i)
         buff[i] = new short [dialog->width()];
@@ -223,10 +217,10 @@ void MainWindow::on_actionCreate_template_triggered()
             img.setPixel(j, i, qRgb(image[i][j] * (255.0f / levels->max()), image[i][j] * (255.0f / levels->max()), image[i][j] * (255.0f / levels->max())));
 
     //Actions disable
-    ui->actionLevels->setEnabled(false);
     ui->actionSave->setEnabled(false);
     //
     //Actions enable
+    ui->actionLevels->setEnabled(true);
     ui->actionCalc->setEnabled(true);
     //
 
@@ -261,18 +255,9 @@ void MainWindow::keyPressEvent(QKeyEvent* event) {
     ui->label_zoom->setText(QString::number(zoom) + "%");
 }
 
-void MainWindow::on_actionLevels_triggered()
-{
-    //Actions disable
-    ui->actionLevels->setEnabled(false);
-    //
-    levels->show();
+void MainWindow::on_actionLevels_triggered() {
     if (levels->exec() != QDialog::Accepted)
         return;
-    //Actions enable
-    ui->actionCalc->setEnabled(true);
-    ui->actionLevels->setEnabled(true);
-    //
     QImage img(image.width(), image.height(), QImage::Format::Format_RGB32);
 
     double left = levels->left(),
@@ -307,19 +292,13 @@ void MainWindow::on_actionLevels_triggered()
 }
 
 void MainWindow::on_actionCalc_triggered() {
-    //Actions disable
-    ui->actionCalc->setEnabled(false);
-    //
     satellite::Image tmp(image);
-    tmp.changeMaxMin(levels->left(), levels->right());
+    if (data_type == Ui::DATA_TYPE::PRO)
+        tmp.cropColor(levels->left(), levels->right());
     var_d->setImage(&tmp);
     var_d->setImageType(data_type);
-    var_d->show();
     if (var_d->exec() == QDialog::Rejected)
         return;
-    //Actions enable
-    ui->actionCalc->setEnabled(true);
-    //
     graphic->setVar(var_d->var(), var_d->dh());
     graphic->show();
 }
