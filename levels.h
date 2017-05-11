@@ -25,6 +25,8 @@ public:
     short left();
     short right();
     short max();
+    short min();
+    bool binary();
 
 private slots:
     void on_radio_button_raw_clicked();
@@ -55,8 +57,10 @@ private:
 
     std::vector< std::pair<double, unsigned long> > _gist;
     std::vector<double> _sum_before;
+
     short _max_val, _min_val, _left, _right, _tmp_left, _tmp_right, dx, _threshold;
     double _sum, _m, _d, _left_m, _right_m, _left_d, _right_d;
+    bool _binary;
 
     Unit unit;
 };

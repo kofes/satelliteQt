@@ -3,12 +3,12 @@
 
 Levels::Levels(QWidget *parent) :
     QDialog(parent),
-    ui(new Ui::Levels)
-{
+    ui(new Ui::Levels) {
     ui->setupUi(this);
     ui->label_image->setBackgroundRole(QPalette::Light);
     ui->label_image->setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Ignored);
     ui->label_image->setScaledContents(true);
+    ui->checkBox_binary->setChecked(false);
     _sum = 0;
 }
 
@@ -50,6 +50,7 @@ void Levels::init(satellite::Image& img) {
     _tmp_right = _right;
 
     unit = Unit::RAW;
+    _binary = false;
 
     double max_x, max_y;
     max_x = _gist.size();
@@ -107,6 +108,7 @@ void Levels::init(satellite::Image& img) {
     ui->radio_button_raw->click();
     on_radio_button_raw_clicked();
     ui->radio_button_default->setChecked(true);
+    ui->checkBox_binary->setChecked(false);
 
     ui->label_image->setPixmap(pxm);
 }
@@ -121,6 +123,14 @@ short Levels::right() {
 
 short Levels::max() {
     return _max_val;
+}
+
+short Levels::min() {
+    return _min_val;
+}
+
+bool Levels::binary() {
+    return _binary;
 }
 
 void Levels::on_radio_button_raw_clicked()
@@ -175,17 +185,17 @@ unsigned long Levels::ind_before(double& sum) {
     return res;
 }
 
-void Levels::on_line_left_val_editingFinished()
-{
+void Levels::on_line_left_val_editingFinished() {
     uncheck_radio();
     QString arg1 = ui->line_left_val->text();
     QPainter painter(&pxm);
 
     painter.fillRect(std::trunc(_left-_min_val), 0, dx, pxm.height(), Qt::gray);
+    painter.fillRect(std::trunc(_right-_min_val), 0, dx, pxm.height(), Qt::gray);
     painter.fillRect(std::trunc((_left+_right)/2-_min_val), 0, dx, pxm.height(), Qt::gray);
-
     for (long i = 0; i < dx; ++i) {
         painter.fillRect(std::trunc(_left-_min_val)+i,            pxm.height() - _gist[std::trunc(_left-_min_val)+i].second,            1, _gist[std::trunc(_left-_min_val)+i].second, Qt::black);
+        painter.fillRect(std::trunc(_right-_min_val)+i,           pxm.height() - _gist[std::trunc(_right-_min_val)+i].second,           1, _gist[std::trunc(_right-_min_val)+i].second, Qt::black);
         painter.fillRect(std::trunc((_left+_right)/2-_min_val)+i, pxm.height() - _gist[std::trunc((_left+_right)/2-_min_val)+i].second, 1, _gist[std::trunc((_left+_right)/2-_min_val)+i].second, Qt::black);
     }
 
@@ -194,31 +204,46 @@ void Levels::on_line_left_val_editingFinished()
         case (Unit::RAW):
             _left = arg1.toLong();
             std::cout << _left << std::endl;
+
+            if (_left >= _right) _right = _left+1;
+            if (_right > _max_val) _left = (_right = _max_val)-1;
+
+            ui->line_left_val->setText(QString::number(std::trunc(_left)));
+            ui->line_right_val->setText(QString::number(std::trunc(_right)));
         break;
         case (Unit::QUANTILE):
             buff = arg1.toDouble();
             buff *= _sum/100;
-            _left = _gist[ind_before(buff)].first;//TODO: sum_before_bisect
+            _left = _gist[ind_before(buff)].first+1;//TODO: sum_before_bisect
+
+            if (_left > _right) _right = _left+1;
+            if (_right > _max_val) _left = (_right = _max_val)-1;
+
+            buff = _sum_before[std::trunc(_left-_min_val)];
             ui->line_left_val->setText(QString::number(buff/_sum*100, 'f', 2));
+            buff = _sum_before[std::trunc(_right-_min_val)];
+            ui->line_right_val->setText(QString::number(buff/_sum*100, 'f', 2));
         break;
     }
 
     painter.fillRect(std::trunc(_left-_min_val), 0, dx, pxm.height(), Qt::green);
+    painter.fillRect(std::trunc(_right-_min_val), 0, dx, pxm.height(), Qt::green);
     painter.fillRect(std::trunc((_left+_right)/2-_min_val), 0, dx, pxm.height(), Qt::red);
 
     painter.end();
     ui->label_image->setPixmap(pxm);
 }
 
-void Levels::on_line_right_val_editingFinished()
-{
+void Levels::on_line_right_val_editingFinished() {
     uncheck_radio();
     QString arg1 = ui->line_right_val->text();
     QPainter painter(&pxm);
 
+    painter.fillRect(std::trunc(_left-_min_val), 0, dx, pxm.height(), Qt::gray);
     painter.fillRect(std::trunc(_right-_min_val), 0, dx, pxm.height(), Qt::gray);
     painter.fillRect(std::trunc((_left+_right)/2-_min_val), 0, dx, pxm.height(), Qt::gray);
     for (long i = 0; i < dx; ++i) {
+        painter.fillRect(std::trunc(_left-_min_val)+i,            pxm.height() - _gist[std::trunc(_left-_min_val)+i].second,            1, _gist[std::trunc(_left-_min_val)+i].second, Qt::black);
         painter.fillRect(std::trunc(_right-_min_val)+i,           pxm.height() - _gist[std::trunc(_right-_min_val)+i].second,           1, _gist[std::trunc(_right-_min_val)+i].second, Qt::black);
         painter.fillRect(std::trunc((_left+_right)/2-_min_val)+i, pxm.height() - _gist[std::trunc((_left+_right)/2-_min_val)+i].second, 1, _gist[std::trunc((_left+_right)/2-_min_val)+i].second, Qt::black);
     }
@@ -228,15 +253,29 @@ void Levels::on_line_right_val_editingFinished()
         case (Unit::RAW):
             _right = arg1.toLong();
             std::cout << _right << std::endl;
+
+            if (_right <= _left) _left = _right - 1;
+            if (_left < 0) _right = (_left = 0)+1;
+
+            ui->line_left_val->setText(QString::number(std::trunc(_left)));
+            ui->line_right_val->setText(QString::number(std::trunc(_right)));
         break;
         case (Unit::QUANTILE):
             buff = arg1.toDouble();
             buff *= _sum/100;
-            _right = _gist[ind_before(buff)].first;//TODO: sum_before_bisect
+            _right = _gist[ind_before(buff)].first+1;//TODO: sum_before_bisect
+
+            if (_right <= _left) _left = _right - 1;
+            if (_left < 0) _right = (_left = 0)+1;
+
+            buff = _sum_before[std::trunc(_right-_min_val)];
             ui->line_right_val->setText(QString::number(buff/_sum*100, 'f', 2));
+            buff = _sum_before[std::trunc(_left-_min_val)];
+            ui->line_left_val->setText(QString::number(buff/_sum*100, 'f', 2));
         break;
     }
 
+    painter.fillRect(std::trunc(_left-_min_val), 0, dx, pxm.height(), Qt::green);
     painter.fillRect(std::trunc(_right-_min_val), 0, dx, pxm.height(), Qt::green);
     painter.fillRect(std::trunc((_left+_right)/2-_min_val), 0, dx, pxm.height(), Qt::red);
 
@@ -371,10 +410,13 @@ void Levels::on_radio_button_default_clicked() {
 
 void Levels::on_buttonBox_clicked(QAbstractButton *button) {
     if (ui->buttonBox->standardButton(button) == QDialogButtonBox::Ok) {
+        _binary = ui->checkBox_binary->isChecked();
+        ui->checkBox_binary->setChecked(false);
         _tmp_left = _left;
         _tmp_right = _right;
         return;
     }
+    ui->checkBox_binary->setChecked(false);
     uncheck_radio();
 
     QPainter painter(&pxm);

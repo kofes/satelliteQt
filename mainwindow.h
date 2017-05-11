@@ -61,6 +61,8 @@ private:
 
     double MIN_ZOOM, MAX_ZOOM;
     double zoom;
+
+    bool binary;
 };
 
 #endif // MAINWINDOW_H

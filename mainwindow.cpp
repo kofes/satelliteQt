@@ -16,6 +16,7 @@ MainWindow::MainWindow(QWidget *parent) :
     zoom = 0;
     MIN_ZOOM = 10;
     MAX_ZOOM = 4000;
+    binary = false;
 
     set_visible_coords(false);
 
@@ -86,36 +87,61 @@ void MainWindow::on_actionOpen_triggered()
                   << (levels->right()+levels->left())/2 << " : "
                   << (levels->right()-levels->left())/2
                   << std::endl;
-
-        double left = levels->left(),
-               right = levels->right();
-        for (auto i = 0; i < image.height(); ++i)
-            for (auto j = 0; j < image.width(); ++j) {
-                short buff = image[i][j];
-                switch (buff) {
-                case -2:
-                    img.setPixel(j, (image.height()-1) - i, qRgb(255,255,0));
+        if (levels->max() == levels->min())
+            for (auto i = 0; i < image.height(); ++i)
+                for (auto j = 0; j < image.width(); ++j) {
+                    short buff = image[i][j];
+                    switch (buff) {
+                    case -2:
+                        img.setPixel(j, (image.height()-1) - i, qRgb(255,255,0));
+                        break;
+                    case -5:
+                        img.setPixel(j, (image.height()-1) - i, qRgb(255, 255/2, 255));
+                        break;
+                    case -7:
+                        img.setPixel(j, (image.height()-1) - i, qRgb(0, 255, 255));
+                        break;
+                    default:
+                        if (buff >= 0)
+                            img.setPixel(j, (image.height()-1) - i, qRgb(buff * (255.0f / levels->max()),
+                                                                         buff * (255.0f / levels->max()),
+                                                                         buff * (255.0f / levels->max())));
                     break;
-                case -5:
-                    img.setPixel(j, (image.height()-1) - i, qRgb(255, 255/2, 255));
-                    break;
-                case -7:
-                    img.setPixel(j, (image.height()-1) - i, qRgb(0, 255, 255));
-                    break;
-                default:
-                    if (image[i][j] <= right && image[i][j] >= left)
-                       img.setPixel(j, (image.height()-1) - i, qRgb(buff-left * (255.0f / (right-left)),
-                                                                    buff-left * (255.0f / (right-left)),
-                                                                    buff-left * (255.0f / (right-left))));
-                    else
-                       img.setPixel(j, (image.height()-1) - i, qRgb(0, 0, 0));
-                break;
+                    }
                 }
-            }
-
+        else {
+            double left = levels->left(),
+                   right = levels->right();
+            for (auto i = 0; i < image.height(); ++i)
+                for (auto j = 0; j < image.width(); ++j) {
+                    short buff = image[i][j];
+                    switch (buff) {
+                    case -2:
+                        img.setPixel(j, (image.height()-1) - i, qRgb(255,255,0));
+                        break;
+                    case -5:
+                        img.setPixel(j, (image.height()-1) - i, qRgb(255, 255/2, 255));
+                        break;
+                    case -7:
+                        img.setPixel(j, (image.height()-1) - i, qRgb(0, 255, 255));
+                        break;
+                    default:
+                        if (image[i][j] <= right && image[i][j] >= left)
+                           img.setPixel(j, (image.height()-1) - i, qRgb(buff-left * (255.0f / (right-left)),
+                                                                        buff-left * (255.0f / (right-left)),
+                                                                        buff-left * (255.0f / (right-left))));
+                        else
+                           img.setPixel(j, (image.height()-1) - i, qRgb(0, 0, 0));
+                    break;
+                    }
+                }
+        }
         //Actions enable
         ui->actionSave->setEnabled(true);
-        ui->actionLevels->setEnabled(true);
+        if (levels->max() != levels->min())
+            ui->actionLevels->setEnabled(true);
+        else
+            ui->actionLevels->setEnabled(false);
         ui->actionCalc->setEnabled(true);
         //
         scene->clear();
@@ -148,7 +174,7 @@ void MainWindow::on_actionOpen_triggered()
 
         //Actions enable
         ui->actionSave->setEnabled(true);
-        ui->actionLevels->setEnabled(true);
+        ui->actionLevels->setEnabled(false);
         ui->actionCalc->setEnabled(true);
         //
         scene->clear();
@@ -224,7 +250,7 @@ void MainWindow::on_actionCreate_template_triggered() {
 
     //Actions enable
     ui->actionSave->setEnabled(true);
-    ui->actionLevels->setEnabled(true);
+    ui->actionLevels->setEnabled(false);
     ui->actionCalc->setEnabled(true);
     //
 
@@ -262,13 +288,15 @@ void MainWindow::keyPressEvent(QKeyEvent* event) {
 void MainWindow::on_actionLevels_triggered() {
     if (levels->exec() != QDialog::Accepted)
         return;
-
+    binary = levels->binary();
     this->setWindowTitle(appName + " - " + _fileName + "*");
 
     QImage img(image.width(), image.height(), QImage::Format::Format_RGB32);
 
     double left = levels->left(),
            right = levels->right();
+    if (levels->max() == levels->min())
+        left = 0;
 
     for (auto i = 0; i < image.height(); ++i)
         for (auto j = 0; j < image.width(); ++j) {
@@ -284,11 +312,14 @@ void MainWindow::on_actionLevels_triggered() {
                 img.setPixel(j, (image.height()-1) - i, qRgb(0, 255, 255));
                 break;
             default:
-                if (image[i][j] <= right && image[i][j] >= left)
-                   img.setPixel(j, (image.height()-1) - i, qRgb(buff-left * (255.0f / (right-left)),
-                                                                buff-left * (255.0f / (right-left)),
-                                                                buff-left * (255.0f / (right-left))));
-                else
+                if (image[i][j] <= right && image[i][j] >= left) {
+                   if (binary)
+                       img.setPixel(j, (image.height()-1)-i, qRgb(255, 255, 255));
+                   else
+                       img.setPixel(j, (image.height()-1) - i, qRgb(buff-left * (255.0f / (right-left)),
+                                                                    buff-left * (255.0f / (right-left)),
+                                                                    buff-left * (255.0f / (right-left))));
+                } else
                    img.setPixel(j, (image.height()-1) - i, qRgb(0, 0, 0));
             break;
             }
@@ -373,6 +404,7 @@ void MainWindow::on_actionSave_triggered() {
 
     if (data_type == Ui::DATA_TYPE::PRO)
         image.cropColor(levels->left(), levels->right());
+    if (binary) image.binary(1);
 
     levels->init(image);
 

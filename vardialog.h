@@ -31,6 +31,14 @@ private slots:
 
     void on_buttonBox_rejected();
 
+    void on_line_top_left_x_editingFinished();
+
+    void on_line_bottom_right_x_editingFinished();
+
+    void on_line_top_left_y_editingFinished();
+
+    void on_line_bottom_right_y_editingFinished();
+
 signals:
     void abort(bool);
 
@@ -49,6 +57,8 @@ private:
 
     bool _cancel_flag;
     Ui::DATA_TYPE _type;
+
+    short _max_x, _max_y;
 };
 
 #endif // VARDIALOG_H

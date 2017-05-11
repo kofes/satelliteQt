@@ -79,6 +79,25 @@
       </widget>
      </item>
      <item>
+      <widget class="QGroupBox" name="groupBox_3">
+       <property name="title">
+        <string/>
+       </property>
+       <layout class="QVBoxLayout" name="verticalLayout_3">
+        <item>
+         <widget class="QCheckBox" name="checkBox_binary">
+          <property name="layoutDirection">
+           <enum>Qt::LeftToRight</enum>
+          </property>
+          <property name="text">
+           <string>Binary</string>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </widget>
+     </item>
+     <item>
       <spacer name="verticalSpacer_2">
        <property name="orientation">
         <enum>Qt::Vertical</enum>
@@ -244,7 +263,7 @@
         <item>
          <widget class="QRadioButton" name="radio_button_default">
           <property name="text">
-           <string>Default</string>
+           <string>De&amp;fault</string>
           </property>
          </widget>
         </item>

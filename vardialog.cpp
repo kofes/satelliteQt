@@ -18,6 +18,10 @@ varDialog::~varDialog() {
 
 void varDialog::setImage(satellite::Image* src) {
     image = src;
+
+    _max_x = image->width()-1;
+    _max_y = image->height()-1;
+
     ui->line_log->setValidator(new QDoubleValidator(1, std::max(image->width()-1, image->height()-1), 2, this));
     ui->line_log->setText(QString::number(0.1, 'f', 2));
 
@@ -118,4 +122,40 @@ void varDialog::reset(bool flag) {
     ui->line_log->setEnabled(flag);
     ui->line_top_left_x->setEnabled(flag);
     ui->line_top_left_y->setEnabled(flag);
+}
+
+void varDialog::on_line_top_left_x_editingFinished() {
+    short x0 = ui->line_top_left_x->text().toShort(),
+          x1 = ui->line_bottom_right_x->text().toShort();
+    if (x0 >= x1) x1 = x0+1;
+    if (x1 > _max_x) x0 = (x1 = _max_x)-1;
+    ui->line_top_left_x->setText(QString::number(x0));
+    ui->line_bottom_right_x->setText(QString::number(x1));
+}
+
+void varDialog::on_line_bottom_right_x_editingFinished() {
+    short x0 = ui->line_top_left_x->text().toShort(),
+          x1 = ui->line_bottom_right_x->text().toShort();
+    if (x1 <= x0) x0 = x1-1;
+    if (x0 < 0) x1 = (x0 = 0)+1;
+    ui->line_top_left_x->setText(QString::number(x0));
+    ui->line_bottom_right_x->setText(QString::number(x1));
+}
+
+void varDialog::on_line_top_left_y_editingFinished() {
+    short y0 = ui->line_top_left_y->text().toShort(),
+          y1 = ui->line_bottom_right_y->text().toShort();
+    if (y0 >= y1) y1 = y0+1;
+    if (y1 > _max_y) y0 = (y1 = _max_y)-1;
+    ui->line_top_left_y->setText(QString::number(y0));
+    ui->line_bottom_right_y->setText(QString::number(y1));
+}
+
+void varDialog::on_line_bottom_right_y_editingFinished() {
+    short y0 = ui->line_top_left_y->text().toShort(),
+          y1 = ui->line_bottom_right_y->text().toShort();
+    if (y1 <= y0) y0 = y1-1;
+    if (y0 < 0) y1 = (y0 = 1)+1;
+    ui->line_top_left_y->setText(QString::number(y0));
+    ui->line_bottom_right_y->setText(QString::number(y1));
 }
