@@ -52,7 +52,7 @@ void MainWindow::on_actionOpen_triggered()
     if (fileName.isEmpty())
         return;
 
-    std::ifstream file(fileName.toStdString());
+    std::ifstream file(fileName.toStdString(), std::ifstream::binary);
     if (!file.is_open()) {
         QMessageBox::critical(this, tr("Error"), tr("Could not open file"));
         return;

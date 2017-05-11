@@ -28,9 +28,6 @@
 #include <QtConcurrent/QtConcurrent>
 #include <QPushButton>
 
-#include <QDebug>
-
-
 #include "inc/Satellite.hpp"
 
 namespace Ui {
