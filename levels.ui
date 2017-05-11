@@ -224,13 +224,13 @@
      <item>
       <widget class="QGroupBox" name="groupBox_2">
        <property name="title">
-        <string>Show (test)</string>
+        <string>Show</string>
        </property>
        <layout class="QVBoxLayout" name="verticalLayout_6">
         <item>
          <widget class="QRadioButton" name="radio_button_snow">
           <property name="text">
-           <string>Snow</string>
+           <string>S&amp;now</string>
           </property>
          </widget>
         </item>
@@ -238,6 +238,13 @@
          <widget class="QRadioButton" name="radio_button_cloud">
           <property name="text">
            <string>C&amp;loud</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QRadioButton" name="radio_button_default">
+          <property name="text">
+           <string>Default</string>
           </property>
          </widget>
         </item>
@@ -258,7 +265,7 @@
       <enum>Qt::Horizontal</enum>
      </property>
      <property name="standardButtons">
-      <set>QDialogButtonBox::Cancel|QDialogButtonBox::Ok|QDialogButtonBox::RestoreDefaults</set>
+      <set>QDialogButtonBox::Cancel|QDialogButtonBox::Ok</set>
      </property>
     </widget>
    </item>

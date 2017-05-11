@@ -18,7 +18,7 @@ public:
     ~varDialog();
 
     void setImage(satellite::Image* src);
-
+    void setImageType(Ui::DATA_TYPE type);
     double dh();
 
     std::vector<double> var();
@@ -48,6 +48,7 @@ private:
     QFutureWatcher<void> fw;
 
     bool _cancel_flag;
+    Ui::DATA_TYPE _type;
 };
 
 #endif // VARDIALOG_H

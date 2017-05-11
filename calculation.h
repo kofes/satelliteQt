@@ -7,6 +7,11 @@
 
 class Calculation;
 
+enum class Calc_type {
+    VARIOGRAM,
+    COVARIANCE
+};
+
 class Calculation : public QObject
 {
     Q_OBJECT
@@ -14,7 +19,7 @@ class Calculation : public QObject
 public:
     explicit Calculation(QObject *parent = 0);
 
-    void set(std::vector<double>* _f, short x, short y, short dx, short dy, short dh, satellite::Image* img);
+    void set(std::vector<double>* _f, short x, short y, short dx, short dy, short dh, satellite::Image* img, Calc_type type);
 
     void operator() ();
 
@@ -30,6 +35,7 @@ private:
 
     std::vector<double>* func;
     bool flag;
+    Calc_type _type;
 };
 
 #endif // CALCULATION_H

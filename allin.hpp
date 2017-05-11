@@ -33,4 +33,13 @@
 
 #include "inc/Satellite.hpp"
 
+namespace Ui {
+enum DATA_TYPE {
+    NONE,
+    PRO,
+    VAR,
+    IMG
+};
+}
+
 #endif // ALLIN_HPP

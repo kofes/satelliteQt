@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>420</width>
-    <height>320</height>
+    <width>391</width>
+    <height>248</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -187,7 +187,7 @@
         </widget>
        </item>
        <item>
-        <widget class="QComboBox" name="comboBox">
+        <widget class="QComboBox" name="comboBox_type">
          <item>
           <property name="text">
            <string>Variogram</string>
@@ -195,7 +195,7 @@
          </item>
          <item>
           <property name="text">
-           <string>Variance</string>
+           <string>Covariance</string>
           </property>
          </item>
         </widget>

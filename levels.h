@@ -35,11 +35,11 @@ private slots:
 
     void on_line_right_val_editingFinished();
 
-    void on_buttonBox_clicked(QAbstractButton *button);
-
     void on_radio_button_snow_clicked();
 
     void on_radio_button_cloud_clicked();
+
+    void on_radio_button_default_clicked();
 
 private:
     void uncheck_radio();
@@ -52,7 +52,8 @@ private:
     QPixmap pxm;
 
     std::vector< std::pair<double, unsigned long> > _gist;
-    short _max_val, _left, _right, dx;
+    std::vector<double> _sum_before;
+    short _max_val, _left, _right, dx, _threshold;
     double _sum;
 
     Unit unit;

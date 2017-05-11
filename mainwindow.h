@@ -10,13 +10,6 @@
 
 namespace Ui {
 
-enum DATA_TYPE {
-    NONE,
-    PRO,
-    VAR,
-    IMG
-};
-
 class MainWindow;
 }
 
@@ -30,6 +23,8 @@ public:
 
 protected:
     virtual void keyPressEvent(QKeyEvent*);
+
+    virtual bool eventFilter(QObject *watched, QEvent *event);
 
 private slots:
     void on_actionOpen_triggered();

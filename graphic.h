@@ -20,10 +20,13 @@ public:
 private slots:
     void on_buttonBox_clicked(QAbstractButton *button);
 
+    void on_checkBox_stateChanged(int arg1);
+
 private:
     Ui::Graphic *ui;
 
     std::vector<double> func;
+    std::vector< std::pair<double, double> > extremes;
     double _dh;
 };
 

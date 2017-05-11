@@ -15,6 +15,20 @@ MainWindow::MainWindow(QWidget *parent) :
     zoom = 0;
     MIN_ZOOM = 10;
     MAX_ZOOM = 4000;
+    ui->label_x->setVisible(false);
+    ui->label_x_coord->setVisible(false);
+    ui->label_y->setVisible(false);
+    ui->label_y_coord->setVisible(false);
+    ui->label_value->setVisible(false);
+    ui->label_value_set->setVisible(false);
+    ui->graphicsView->setDragMode(QGraphicsView::NoDrag);
+    ui->graphicsView->setCursor(Qt::CrossCursor);
+    qApp->installEventFilter(this);
+    //Actions disable
+    ui->actionSave->setEnabled(false);
+    ui->actionLevels->setEnabled(false);
+    ui->actionCalc->setEnabled(false);
+    //
 }
 
 MainWindow::~MainWindow()
@@ -43,13 +57,6 @@ void MainWindow::on_actionOpen_triggered()
         QMessageBox::critical(this, tr("Error"), tr("Could not open file"));
         return;
     }
-
-    //Actions disable
-    ui->actionLevels->setEnabled(false);
-    ui->actionCalc->setEnabled(false);
-    ui->actionShowExtremes->setEnabled(false);
-    ui->actionSave->setEnabled(false);
-    //
 
     QFileInfo fileInfo(fileName);
     if (fileInfo.suffix() == "pro") {
@@ -93,15 +100,17 @@ void MainWindow::on_actionOpen_triggered()
                     break;
                 default:
                     if (image[i][j] <= right && image[i][j] >= left)
-                       img.setPixel(j, (image.height()-1) - i, qRgb(buff-left * (255.0f / ((right-left))),
-                                                                    buff-left * (255.0f / ((right-left))),
-                                                                    buff-left * (255.0f / ((right-left)))));
+                       img.setPixel(j, (image.height()-1) - i, qRgb(buff-left * (255.0f / (right-left)),
+                                                                    buff-left * (255.0f / (right-left)),
+                                                                    buff-left * (255.0f / (right-left))));
                     else
                        img.setPixel(j, (image.height()-1) - i, qRgb(0, 0, 0));
                 break;
                 }
             }
-
+        //Actions disable
+        ui->actionSave->setEnabled(false);
+        //
         //Actions enable
         ui->actionLevels->setEnabled(true);
         ui->actionCalc->setEnabled(true);
@@ -131,6 +140,10 @@ void MainWindow::on_actionOpen_triggered()
             for (auto j = 0; j < image.width(); ++j)
                 img.setPixel(j, i, qRgb(image[i][j] * (255.0f / levels->max()), image[i][j] * (255.0f / levels->max()), image[i][j] * (255.0f / levels->max())));
 
+        //Actions disable
+        ui->actionLevels->setEnabled(false);
+        ui->actionSave->setEnabled(false);
+        //
         //Actions enable
         ui->actionCalc->setEnabled(true);
         //
@@ -174,10 +187,15 @@ void MainWindow::on_actionCreate_template_triggered()
 {
     short** buff;
 
+    //Actions disable
+    ui->actionCreate_template->setEnabled(false);
+    //
     dialog->show();
     if (dialog->exec() != QDialog::Accepted)
         return;
-
+    //Actions enable
+    ui->actionCreate_template->setEnabled(true);
+    //
     buff = new short* [dialog->height()];
     for (unsigned short i = 0; i < dialog->height(); ++i)
         buff[i] = new short [dialog->width()];
@@ -203,6 +221,14 @@ void MainWindow::on_actionCreate_template_triggered()
     for (auto i = 0; i < image.height(); ++i)
         for (auto j = 0; j < image.width(); ++j)
             img.setPixel(j, i, qRgb(image[i][j] * (255.0f / levels->max()), image[i][j] * (255.0f / levels->max()), image[i][j] * (255.0f / levels->max())));
+
+    //Actions disable
+    ui->actionLevels->setEnabled(false);
+    ui->actionSave->setEnabled(false);
+    //
+    //Actions enable
+    ui->actionCalc->setEnabled(true);
+    //
 
     scene->clear();
     ui->graphicsView->setScene(scene);
@@ -237,10 +263,16 @@ void MainWindow::keyPressEvent(QKeyEvent* event) {
 
 void MainWindow::on_actionLevels_triggered()
 {
+    //Actions disable
+    ui->actionLevels->setEnabled(false);
+    //
     levels->show();
     if (levels->exec() != QDialog::Accepted)
         return;
-
+    //Actions enable
+    ui->actionCalc->setEnabled(true);
+    ui->actionLevels->setEnabled(true);
+    //
     QImage img(image.width(), image.height(), QImage::Format::Format_RGB32);
 
     double left = levels->left(),
@@ -261,9 +293,9 @@ void MainWindow::on_actionLevels_triggered()
                 break;
             default:
                 if (image[i][j] <= right && image[i][j] >= left)
-                   img.setPixel(j, (image.height()-1) - i, qRgb(buff-left * (255.0f / ((right-left))),
-                                                                buff-left * (255.0f / ((right-left))),
-                                                                buff-left * (255.0f / ((right-left)))));
+                   img.setPixel(j, (image.height()-1) - i, qRgb(buff-left * (255.0f / (right-left)),
+                                                                buff-left * (255.0f / (right-left)),
+                                                                buff-left * (255.0f / (right-left))));
                 else
                    img.setPixel(j, (image.height()-1) - i, qRgb(0, 0, 0));
             break;
@@ -274,14 +306,52 @@ void MainWindow::on_actionLevels_triggered()
     ui->graphicsView->fitInView(scene->sceneRect(), Qt::KeepAspectRatio);
 }
 
-void MainWindow::on_actionCalc_triggered()
-{
+void MainWindow::on_actionCalc_triggered() {
+    //Actions disable
+    ui->actionCalc->setEnabled(false);
+    //
     satellite::Image tmp(image);
     tmp.changeMaxMin(levels->left(), levels->right());
     var_d->setImage(&tmp);
+    var_d->setImageType(data_type);
     var_d->show();
     if (var_d->exec() == QDialog::Rejected)
         return;
+    //Actions enable
+    ui->actionCalc->setEnabled(true);
+    //
     graphic->setVar(var_d->var(), var_d->dh());
     graphic->show();
+}
+
+bool MainWindow::eventFilter(QObject *watched, QEvent *event) {
+    if (event->type() == QEvent::MouseMove) {
+        QPoint viewPoint = ui->graphicsView->mapFromGlobal(QCursor::pos());
+        QPointF scenePoint = ui->graphicsView->mapToScene(viewPoint);
+
+        long long x, y;
+        x = scenePoint.x();
+        y = scenePoint.y();
+
+        if (x >= 0 && x < image.width() && y >= 0 && y < image.height()) {
+            ui->label_x->setVisible(true);
+            ui->label_x_coord->setVisible(true);
+            ui->label_y->setVisible(true);
+            ui->label_y_coord->setVisible(true);
+            ui->label_value->setVisible(true);
+            ui->label_value_set->setVisible(true);
+
+            ui->label_x_coord->setText(QString::number(x));
+            ui->label_y_coord->setText(QString::number(y));
+            ui->label_value_set->setText(QString::number(image[image.height() - (y+1)][x]));
+        } else {
+            ui->label_x->setVisible(false);
+            ui->label_x_coord->setVisible(false);
+            ui->label_y->setVisible(false);
+            ui->label_y_coord->setVisible(false);
+            ui->label_value->setVisible(false);
+            ui->label_value_set->setVisible(false);
+        }
+    }
+      return false;
 }
