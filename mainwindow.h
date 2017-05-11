@@ -8,13 +8,14 @@
 #include "vardialog.h"
 #include "graphic.h"
 
+static const QString appName = "SatelliteVar";
+
 namespace Ui {
 
 class MainWindow;
 }
 
-class MainWindow : public QMainWindow
-{
+class MainWindow : public QMainWindow {
     Q_OBJECT
 
 public:
@@ -37,7 +38,11 @@ private slots:
 
     void on_actionCalc_triggered();
 
+    void on_actionSave_triggered();
+    
 private:
+    void set_visible_coords(bool flag);
+
     Ui::MainWindow *ui;
 
     QGraphicsScene *scene;
@@ -51,6 +56,8 @@ private:
 
     satellite::passport::Proection passport;
     satellite::Image image;
+
+    QString _fileName;
 
     double MIN_ZOOM, MAX_ZOOM;
     double zoom;

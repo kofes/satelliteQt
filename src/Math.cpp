@@ -605,11 +605,9 @@ size_t satellite::math::threshold_Otsu ( const std::vector< std::pair<double, un
     a = (double)alpha / beta - (m - alpha) / (n - beta);
     sigma = w1 * (1 - w1) * a * a;
 
-    std::cout << "--------\nt: " << t << std::endl;
     if (sigma > maxSigma) {
       maxSigma = sigma;
       threshold = t;
-      std::cout << "T: " << t << std::endl;
     }
   }
 

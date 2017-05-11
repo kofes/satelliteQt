@@ -11,19 +11,20 @@ MainWindow::MainWindow(QWidget *parent) :
     dialog = new CreateImage(this);
     var_d = new varDialog(this);
     graphic = new Graphic(this);
+
     data_type = Ui::DATA_TYPE::NONE;
     zoom = 0;
     MIN_ZOOM = 10;
     MAX_ZOOM = 4000;
-    ui->label_x->setVisible(false);
-    ui->label_x_coord->setVisible(false);
-    ui->label_y->setVisible(false);
-    ui->label_y_coord->setVisible(false);
-    ui->label_value->setVisible(false);
-    ui->label_value_set->setVisible(false);
+
+    set_visible_coords(false);
+
+    this->setWindowTitle(appName);
     ui->graphicsView->setDragMode(QGraphicsView::NoDrag);
     ui->graphicsView->setCursor(Qt::CrossCursor);
+
     qApp->installEventFilter(this);
+
     //Actions disable
     ui->actionSave->setEnabled(false);
     ui->actionLevels->setEnabled(false);
@@ -48,7 +49,7 @@ MainWindow::~MainWindow()
 void MainWindow::on_actionOpen_triggered()
 {
     QString fileName = QFileDialog::getOpenFileName(this, tr("Open File"), "",
-                                                    tr("lab34 files (*.pro);;Var files (*.var);;Generated images (*.img)"));
+                                                    tr("lab 34 files (*.pro);;Var files (*.var);;Generated images (*.img)"));
     if (fileName.isEmpty())
         return;
 
@@ -70,6 +71,9 @@ void MainWindow::on_actionOpen_triggered()
         }
 
         data_type = Ui::DATA_TYPE::PRO;
+
+        _fileName = fileInfo.fileName();
+        this->setWindowTitle(appName + " - " + _fileName);
 
         passport = pass;
 
@@ -108,10 +112,9 @@ void MainWindow::on_actionOpen_triggered()
                 break;
                 }
             }
-        //Actions disable
-        ui->actionSave->setEnabled(false);
-        //
+
         //Actions enable
+        ui->actionSave->setEnabled(true);
         ui->actionLevels->setEnabled(true);
         ui->actionCalc->setEnabled(true);
         //
@@ -129,6 +132,9 @@ void MainWindow::on_actionOpen_triggered()
 
         data_type = Ui::DATA_TYPE::IMG;
 
+        _fileName = fileInfo.fileName();
+        this->setWindowTitle(appName + " - " + _fileName);
+
         file.read(reinterpret_cast<char *>(&height), sizeof(height));
         file.read(reinterpret_cast<char *>(&width), sizeof(width));
         image.read(width, height, file);
@@ -140,10 +146,8 @@ void MainWindow::on_actionOpen_triggered()
             for (auto j = 0; j < image.width(); ++j)
                 img.setPixel(j, i, qRgb(image[i][j] * (255.0f / levels->max()), image[i][j] * (255.0f / levels->max()), image[i][j] * (255.0f / levels->max())));
 
-        //Actions disable
-        ui->actionSave->setEnabled(false);
-        //
         //Actions enable
+        ui->actionSave->setEnabled(true);
         ui->actionLevels->setEnabled(true);
         ui->actionCalc->setEnabled(true);
         //
@@ -171,8 +175,7 @@ void MainWindow::on_actionOpen_triggered()
     }
 }
 
-void MainWindow::on_actionQuit_triggered()
-{
+void MainWindow::on_actionQuit_triggered() {
     QMessageBox messageBox;
     messageBox.setWindowTitle(tr("satellite"));
     messageBox.setText(tr("Do you teally want to quit?"));
@@ -183,8 +186,7 @@ void MainWindow::on_actionQuit_triggered()
 
 }
 
-void MainWindow::on_actionCreate_template_triggered()
-{
+void MainWindow::on_actionCreate_template_triggered() {
     short** buff;
 
     if (dialog->exec() != QDialog::Accepted)
@@ -208,6 +210,10 @@ void MainWindow::on_actionCreate_template_triggered()
                     dialog->space(), dialog->epsilon(), dialog->shape(), dialog->fill());
 
     data_type = Ui::DATA_TYPE::IMG;
+
+    _fileName.clear();
+    this->setWindowTitle(appName);
+
     QImage img(image.width(), image.height(), QImage::Format::Format_RGB32);
 
     levels->init(image);
@@ -216,10 +222,8 @@ void MainWindow::on_actionCreate_template_triggered()
         for (auto j = 0; j < image.width(); ++j)
             img.setPixel(j, i, qRgb(image[i][j] * (255.0f / levels->max()), image[i][j] * (255.0f / levels->max()), image[i][j] * (255.0f / levels->max())));
 
-    //Actions disable
-    ui->actionSave->setEnabled(false);
-    //
     //Actions enable
+    ui->actionSave->setEnabled(true);
     ui->actionLevels->setEnabled(true);
     ui->actionCalc->setEnabled(true);
     //
@@ -258,6 +262,9 @@ void MainWindow::keyPressEvent(QKeyEvent* event) {
 void MainWindow::on_actionLevels_triggered() {
     if (levels->exec() != QDialog::Accepted)
         return;
+
+    this->setWindowTitle(appName + " - " + _fileName + "*");
+
     QImage img(image.width(), image.height(), QImage::Format::Format_RGB32);
 
     double left = levels->left(),
@@ -304,7 +311,7 @@ void MainWindow::on_actionCalc_triggered() {
 }
 
 bool MainWindow::eventFilter(QObject *watched, QEvent *event) {
-    if (event->type() == QEvent::MouseMove) {
+    if (event->type() == QEvent::MouseMove && watched->objectName() == "MainWindowWindow") {
         QPoint viewPoint = ui->graphicsView->mapFromGlobal(QCursor::pos());
         QPointF scenePoint = ui->graphicsView->mapToScene(viewPoint);
 
@@ -313,24 +320,74 @@ bool MainWindow::eventFilter(QObject *watched, QEvent *event) {
         y = scenePoint.y();
 
         if (x >= 0 && x < image.width() && y >= 0 && y < image.height()) {
-            ui->label_x->setVisible(true);
-            ui->label_x_coord->setVisible(true);
-            ui->label_y->setVisible(true);
-            ui->label_y_coord->setVisible(true);
-            ui->label_value->setVisible(true);
-            ui->label_value_set->setVisible(true);
+            set_visible_coords(true);
 
             ui->label_x_coord->setText(QString::number(x));
             ui->label_y_coord->setText(QString::number(y));
             ui->label_value_set->setText(QString::number(image[image.height() - (y+1)][x]));
-        } else {
-            ui->label_x->setVisible(false);
-            ui->label_x_coord->setVisible(false);
-            ui->label_y->setVisible(false);
-            ui->label_y_coord->setVisible(false);
-            ui->label_value->setVisible(false);
-            ui->label_value_set->setVisible(false);
-        }
+        } else
+            set_visible_coords(false);
     }
       return false;
+}
+
+void MainWindow::set_visible_coords(bool flag) {
+    ui->label_x->setVisible(flag);
+    ui->label_x_coord->setVisible(flag);
+    ui->label_y->setVisible(flag);
+    ui->label_y_coord->setVisible(flag);
+    ui->label_value->setVisible(flag);
+    ui->label_value_set->setVisible(flag);
+}
+
+void MainWindow::on_actionSave_triggered() {
+    QString fileName;
+    switch (data_type) {
+        case Ui::DATA_TYPE::IMG:
+            fileName = QFileDialog::getSaveFileName(this, tr("Save File"), "",
+                                                  tr("Generated images (*.img)"));
+        break;
+        case Ui::DATA_TYPE::PRO:
+            fileName = QFileDialog::getSaveFileName(this, tr("Save File"), "",
+                                                  tr("lab 34 files (*.pro)"));
+        break;
+        default: return;
+    }
+
+    if (fileName.isEmpty())
+        return;
+
+    std::ofstream file(fileName.toStdString(), std::ofstream::binary);
+
+    if (!file.is_open()) {
+        QMessageBox::critical(this, tr("Error"), tr("Could not open file"));
+        return;
+    }
+
+    QFileInfo fileInfo(fileName);
+    _fileName = fileInfo.fileName();
+    this->setWindowTitle(appName + " - " + _fileName);
+
+    unsigned short height = image.height(),
+                   width = image.width();
+
+    if (data_type == Ui::DATA_TYPE::PRO)
+        image.cropColor(levels->left(), levels->right());
+
+    levels->init(image);
+
+    switch (data_type) {
+    case Ui::DATA_TYPE::IMG:
+        file.write((char*)(&(height)), sizeof(height));
+        file.write((char*)(&(width)), sizeof(width));
+        file < image;
+    break;
+    case Ui::DATA_TYPE::PRO:
+
+        file < passport;
+        file < image;
+    break;
+    default:
+        break;
+    }
 }

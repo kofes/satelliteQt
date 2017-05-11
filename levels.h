@@ -41,6 +41,8 @@ private slots:
 
     void on_radio_button_default_clicked();
 
+    void on_buttonBox_clicked(QAbstractButton *button);
+
 private:
     void uncheck_radio();
 
@@ -53,8 +55,8 @@ private:
 
     std::vector< std::pair<double, unsigned long> > _gist;
     std::vector<double> _sum_before;
-    short _max_val, _left, _right, dx, _threshold;
-    double _sum;
+    short _max_val, _min_val, _left, _right, _tmp_left, _tmp_right, dx, _threshold;
+    double _sum, _m, _d, _left_m, _right_m, _left_d, _right_d;
 
     Unit unit;
 };

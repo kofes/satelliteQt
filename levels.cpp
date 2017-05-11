@@ -18,30 +18,36 @@ Levels::~Levels()
 }
 
 void Levels::init(satellite::Image& img) {
-    double central_val, average_disp_val;
-
     _max_val = 0;
+    _min_val = SHRT_MAX;
     for (auto i = 0; i < img.height(); ++i)
-        for (auto j = 0; j < img.width(); ++j)
+        for (auto j = 0; j < img.width(); ++j) {
             _max_val = (_max_val > img[i][j]) ? _max_val : img[i][j];
-
+            _min_val = (_min_val > img[i][j] && img[i][j] > 0) ? img[i][j] : _min_val;
+        }
+    std::cout << "MIN_VAL: " << _min_val << '\n'
+              << "MAX_VAL: " << _max_val
+              << std::endl;
     _gist.clear();
-    _gist.resize(_max_val+1, std::make_pair(0, 0));
+    _gist.resize(_max_val-_min_val+1, std::make_pair(0, 0));
 
     for (int i = 0; i < img.height(); ++i)
         for (int j = 0; j < img.width(); ++j)
             if (img[i][j] > 0) {
-                _gist[img[i][j]].first = img[i][j];
-                _gist[img[i][j]].second++;
+                _gist[img[i][j]-_min_val].first = img[i][j];
+                _gist[img[i][j]-_min_val].second++;
             }
 
-    central_val = satellite::math::first_row_moment(_gist);
-    average_disp_val = satellite::math::central_moment(_gist);
+    _m = satellite::math::first_row_moment(_gist);
+    _d = satellite::math::central_moment(_gist);
 
-    _left = central_val - std::sqrt(average_disp_val);
-    _right = central_val + std::sqrt(average_disp_val);
-    if (_left < 0) _left = 0;
+    _left = _m - std::sqrt(_d);
+    _right = _m + std::sqrt(_d);
+    if (_left < _min_val) _left = _min_val;
     if (_right > _max_val) _right = _max_val;
+
+    _tmp_left = _left;
+    _tmp_right = _right;
 
     unit = Unit::RAW;
 
@@ -57,24 +63,28 @@ void Levels::init(satellite::Image& img) {
     }
     _sum_before.push_back(_sum);
     //Otsu
-    double sum_all = 0,
-           maxS = -1;
-    for (auto elem : _gist)
-        sum_all += elem.first * elem.second;
-    size_t alpha1 = 0,
-           beta1 = 0;
-    for (size_t i = 0; i < _gist.size(); ++i) {
-        alpha1 += _gist[i].first * _gist[i].second;
-        beta1 += _gist[i].second;
-        double w1 = beta1 / _sum;
-        double a = (double)(alpha1) / beta1 - (sum_all - alpha1)/(_sum - beta1);
-        double s = w1 * (1-w1)*a*a;
-        if (s > maxS) {
-            maxS = s;
-            _threshold = i;
-        }
-    }
+    _threshold = satellite::math::threshold_Otsu(_gist);
+    //
+    //Snow/Clouds
+    double E, D;
+    E = satellite::math::first_row_moment(_gist);
+    D = satellite::math::central_moment(_gist);
+    _left_m = 0;
+    _right_m = std::trunc(E-_min_val);
+    for (unsigned long i = 0; i < std::trunc(E-_min_val); ++i)
+        _left_m = (_gist[_left_m].second > _gist[i].second) ? _left_m : i;
+    for (unsigned short i = std::trunc(E-_min_val); i < _gist.size(); ++i)
+      _right_m = (_gist[_right_m].second > _gist[i].second) ? _right_m : i;
 
+    _left_m = _gist[_left_m].first;
+    _left_d = satellite::math::moment(_gist, _left_m, 2);
+    _right_m = _gist[_right_m].first;
+    _right_d = satellite::math::moment(_gist, _right_m, 2);
+
+    if (D < _left_d + _right_d) {
+      _left_d = _left_d * ( D / (_left_d + _right_d));
+      _right_d = D - _left_d;
+    }
     //
     pxm = QPixmap(max_x, max_y*1.10);
 
@@ -88,9 +98,9 @@ void Levels::init(satellite::Image& img) {
     for (size_t i = 0; i < _gist.size(); ++i)
         painter.drawRect(i, pxm.height() - _gist[i].second, 1, _gist[i].second);
 
-    painter.fillRect(std::trunc(_left), 0, dx, pxm.height(), Qt::green);
-    painter.fillRect(std::trunc(_right), 0, dx, pxm.height(), Qt::green);
-    painter.fillRect(std::trunc((_left+_right)/2), 0, dx, pxm.height(), Qt::red);
+    painter.fillRect(std::trunc(_left-_min_val), 0, dx, pxm.height(), Qt::green);
+    painter.fillRect(std::trunc(_right-_min_val), 0, dx, pxm.height(), Qt::green);
+    painter.fillRect(std::trunc((_left+_right)/2-_min_val), 0, dx, pxm.height(), Qt::red);
 
     painter.end();
 
@@ -118,8 +128,8 @@ void Levels::on_radio_button_raw_clicked()
     unit = Unit::RAW;
     (const_cast<QValidator *>(ui->line_left_val->validator()))->deleteLater();
     (const_cast<QValidator *>(ui->line_right_val->validator()))->deleteLater();
-    ui->line_left_val->setValidator(new QIntValidator(0, _gist.size(), this));
-    ui->line_right_val->setValidator(new QIntValidator(0, _gist.size(), this));
+    ui->line_left_val->setValidator(new QIntValidator(_min_val, _max_val, this));
+    ui->line_right_val->setValidator(new QIntValidator(_min_val, _max_val, this));
     ui->line_left_val->setText(QString::number(std::trunc(_left)));
     ui->line_right_val->setText(QString::number(std::trunc(_right)));
 }
@@ -131,15 +141,15 @@ void Levels::on_radio_button_quantile_clicked()
     (const_cast<QValidator *>(ui->line_right_val->validator()))->deleteLater();
     ui->line_left_val->setValidator(new QDoubleValidator(0, 100, 2, this));
     ui->line_right_val->setValidator(new QDoubleValidator(0, 100, 2, this));
-    ui->line_left_val->setText(QString::number(_sum_before[std::trunc(_left)]/_sum*100, 'f', 2));
-    ui->line_right_val->setText(QString::number(_sum_before[std::trunc(_right)]/_sum*100, 'f', 2));
+    ui->line_left_val->setText(QString::number(_sum_before[std::trunc(_left-_min_val)]/_sum*100, 'f', 2));
+    ui->line_right_val->setText(QString::number(_sum_before[std::trunc(_right-_min_val)]/_sum*100, 'f', 2));
 }
 
 double Levels::sum_before(short& end) {
     double res = 0;
 
     for (auto elem : _gist)
-        if (elem.first <= end)
+        if (elem.first-_min_val <= end)
             res += elem.second;
         else
             break;
@@ -171,12 +181,12 @@ void Levels::on_line_left_val_editingFinished()
     QString arg1 = ui->line_left_val->text();
     QPainter painter(&pxm);
 
-    painter.fillRect(std::trunc(_left), 0, dx, pxm.height(), Qt::gray);
-    painter.fillRect(std::trunc((_left+_right)/2), 0, dx, pxm.height(), Qt::gray);
+    painter.fillRect(std::trunc(_left-_min_val), 0, dx, pxm.height(), Qt::gray);
+    painter.fillRect(std::trunc((_left+_right)/2-_min_val), 0, dx, pxm.height(), Qt::gray);
 
     for (long i = 0; i < dx; ++i) {
-        painter.fillRect(std::trunc(_left)+i,            pxm.height() - _gist[std::trunc(_left)+i].second,            1, _gist[std::trunc(_left)+i].second, Qt::black);
-        painter.fillRect(std::trunc((_left+_right)/2)+i, pxm.height() - _gist[std::trunc((_left+_right)/2)+i].second, 1, _gist[std::trunc((_left+_right)/2)+i].second, Qt::black);
+        painter.fillRect(std::trunc(_left-_min_val)+i,            pxm.height() - _gist[std::trunc(_left-_min_val)+i].second,            1, _gist[std::trunc(_left-_min_val)+i].second, Qt::black);
+        painter.fillRect(std::trunc((_left+_right)/2-_min_val)+i, pxm.height() - _gist[std::trunc((_left+_right)/2-_min_val)+i].second, 1, _gist[std::trunc((_left+_right)/2-_min_val)+i].second, Qt::black);
     }
 
     double buff;
@@ -188,13 +198,13 @@ void Levels::on_line_left_val_editingFinished()
         case (Unit::QUANTILE):
             buff = arg1.toDouble();
             buff *= _sum/100;
-            _left = ind_before(buff);//TODO: sum_before_bisect
+            _left = _gist[ind_before(buff)].first;//TODO: sum_before_bisect
             ui->line_left_val->setText(QString::number(buff/_sum*100, 'f', 2));
         break;
     }
 
-    painter.fillRect(std::trunc(_left), 0, dx, pxm.height(), Qt::green);
-    painter.fillRect(std::trunc((_left+_right)/2), 0, dx, pxm.height(), Qt::red);
+    painter.fillRect(std::trunc(_left-_min_val), 0, dx, pxm.height(), Qt::green);
+    painter.fillRect(std::trunc((_left+_right)/2-_min_val), 0, dx, pxm.height(), Qt::red);
 
     painter.end();
     ui->label_image->setPixmap(pxm);
@@ -206,11 +216,11 @@ void Levels::on_line_right_val_editingFinished()
     QString arg1 = ui->line_right_val->text();
     QPainter painter(&pxm);
 
-    painter.fillRect(std::trunc(_right), 0, dx, pxm.height(), Qt::gray);
-    painter.fillRect(std::trunc((_left+_right)/2), 0, dx, pxm.height(), Qt::gray);
+    painter.fillRect(std::trunc(_right-_min_val), 0, dx, pxm.height(), Qt::gray);
+    painter.fillRect(std::trunc((_left+_right)/2-_min_val), 0, dx, pxm.height(), Qt::gray);
     for (long i = 0; i < dx; ++i) {
-        painter.fillRect(std::trunc(_right)+i,           pxm.height() - _gist[std::trunc(_right)+i].second,           1, _gist[std::trunc(_right)+i].second, Qt::black);
-        painter.fillRect(std::trunc((_left+_right)/2)+i, pxm.height() - _gist[std::trunc((_left+_right)/2)+i].second, 1, _gist[std::trunc((_left+_right)/2)+i].second, Qt::black);
+        painter.fillRect(std::trunc(_right-_min_val)+i,           pxm.height() - _gist[std::trunc(_right-_min_val)+i].second,           1, _gist[std::trunc(_right-_min_val)+i].second, Qt::black);
+        painter.fillRect(std::trunc((_left+_right)/2-_min_val)+i, pxm.height() - _gist[std::trunc((_left+_right)/2-_min_val)+i].second, 1, _gist[std::trunc((_left+_right)/2-_min_val)+i].second, Qt::black);
     }
 
     double buff;
@@ -222,61 +232,34 @@ void Levels::on_line_right_val_editingFinished()
         case (Unit::QUANTILE):
             buff = arg1.toDouble();
             buff *= _sum/100;
-            _right = ind_before(buff);//TODO: sum_before_bisect
+            _right = _gist[ind_before(buff)].first;//TODO: sum_before_bisect
             ui->line_right_val->setText(QString::number(buff/_sum*100, 'f', 2));
         break;
     }
 
-    painter.fillRect(std::trunc(_right), 0, dx, pxm.height(), Qt::green);
-    painter.fillRect(std::trunc((_left+_right)/2), 0, dx, pxm.height(), Qt::red);
+    painter.fillRect(std::trunc(_right-_min_val), 0, dx, pxm.height(), Qt::green);
+    painter.fillRect(std::trunc((_left+_right)/2-_min_val), 0, dx, pxm.height(), Qt::red);
 
     painter.end();
     ui->label_image->setPixmap(pxm);
 }
 
-void Levels::on_radio_button_snow_clicked()
-{
-    double E, D,
-           minus_m, plus_m,
-           minus_d, plus_d;
-
-    E = satellite::math::first_row_moment(_gist);
-    D = satellite::math::central_moment(_gist);
-
-    minus_m = 0;
-    plus_m = std::trunc(E);
-
-    for (unsigned long i = 0; i < std::trunc(E); ++i)
-        minus_m = (_gist[minus_m].second > _gist[i].second) ? minus_m : i;
-
-    for (unsigned short i = std::trunc(E); i < _gist.size(); ++i)
-      plus_m = (_gist[plus_m].second > _gist[i].second) ? plus_m : i;
-
-    minus_m = _gist[minus_m].first;
-    minus_d = satellite::math::moment(_gist, minus_m, 2);
-
-    plus_m = _gist[plus_m].first;
-    plus_d = satellite::math::moment(_gist, plus_m, 2);
-
-    if (D < minus_d + plus_d) {
-      minus_d = minus_d * ( D / (minus_d + plus_d));
-      plus_d = D - minus_d;
-    }
+void Levels::on_radio_button_snow_clicked() {
 
     QPainter painter(&pxm);
 
-    painter.fillRect(std::trunc(_left), 0, dx, pxm.height(), Qt::gray);
-    painter.fillRect(std::trunc(_right), 0, dx, pxm.height(), Qt::gray);
-    painter.fillRect(std::trunc((_left+_right)/2), 0, dx, pxm.height(), Qt::gray);
+    painter.fillRect(std::trunc(_left-_min_val), 0, dx, pxm.height(), Qt::gray);
+    painter.fillRect(std::trunc(_right-_min_val), 0, dx, pxm.height(), Qt::gray);
+    painter.fillRect(std::trunc((_left+_right)/2-_min_val), 0, dx, pxm.height(), Qt::gray);
     for (long i = 0; i < dx; ++i) {
-        painter.fillRect(std::trunc(_left)+i,            pxm.height() - _gist[std::trunc(_left)+i].second,            1, _gist[std::trunc(_left)+i].second, Qt::black);
-        painter.fillRect(std::trunc(_right)+i,           pxm.height() - _gist[std::trunc(_right)+i].second,           1, _gist[std::trunc(_right)+i].second, Qt::black);
-        painter.fillRect(std::trunc((_left+_right)/2)+i, pxm.height() - _gist[std::trunc((_left+_right)/2)+i].second, 1, _gist[std::trunc((_left+_right)/2)+i].second, Qt::black);
+        painter.fillRect(std::trunc(_left-_min_val)+i,            pxm.height() - _gist[std::trunc(_left-_min_val)+i].second,            1, _gist[std::trunc(_left-_min_val)+i].second, Qt::black);
+        painter.fillRect(std::trunc(_right-_min_val)+i,           pxm.height() - _gist[std::trunc(_right-_min_val)+i].second,           1, _gist[std::trunc(_right-_min_val)+i].second, Qt::black);
+        painter.fillRect(std::trunc((_left+_right)/2-_min_val)+i, pxm.height() - _gist[std::trunc((_left+_right)/2-_min_val)+i].second, 1, _gist[std::trunc((_left+_right)/2-_min_val)+i].second, Qt::black);
     }
 
-    _left = minus_m - std::sqrt(minus_d);
-    _right = minus_m + std::sqrt(minus_d);
-    if (_left < 0) _left = 0;
+    _left = _left_m - std::sqrt(_left_d);
+    _right = _left_m + std::sqrt(_left_d);
+    if (_left < _min_val) _left = _min_val;
     if (_right > _max_val) _right = _max_val;
 
     switch (unit) {
@@ -285,62 +268,35 @@ void Levels::on_radio_button_snow_clicked()
             ui->line_right_val->setText(QString::number(std::trunc(_right)));
         break;
         case (Unit::QUANTILE):
-            ui->line_left_val->setText(QString::number(_sum_before[std::trunc(_left)]/_sum*100, 'f', 2));
-            ui->line_right_val->setText(QString::number(_sum_before[std::trunc(_right)]/_sum*100, 'f', 2));
+            ui->line_left_val->setText(QString::number(_sum_before[std::trunc(_left-_min_val)]/_sum*100, 'f', 2));
+            ui->line_right_val->setText(QString::number(_sum_before[std::trunc(_right-_min_val)]/_sum*100, 'f', 2));
         break;
     }
 
-    painter.fillRect(std::trunc(_left), 0, dx, pxm.height(), Qt::green);
-    painter.fillRect(std::trunc(_right), 0, dx, pxm.height(), Qt::green);
-    painter.fillRect(std::trunc((_left+_right)/2), 0, dx, pxm.height(), Qt::red);
+    painter.fillRect(std::trunc(_left-_min_val), 0, dx, pxm.height(), Qt::green);
+    painter.fillRect(std::trunc(_right-_min_val), 0, dx, pxm.height(), Qt::green);
+    painter.fillRect(std::trunc((_left+_right)/2-_min_val), 0, dx, pxm.height(), Qt::red);
 
     painter.end();
     ui->label_image->setPixmap(pxm);
 }
 
-void Levels::on_radio_button_cloud_clicked()
-{
-    double E, D,
-           minus_m, plus_m,
-           minus_d, plus_d;
-
-    E = satellite::math::first_row_moment(_gist);
-    D = satellite::math::central_moment(_gist);
-
-    minus_m = 0;
-    plus_m = std::trunc(E);
-
-    for (unsigned long i = 0; i < std::trunc(E); ++i)
-        minus_m = (_gist[minus_m].second > _gist[i].second) ? minus_m : i;
-
-    for (unsigned short i = std::trunc(E); i < _gist.size(); ++i)
-      plus_m = (_gist[plus_m].second > _gist[i].second) ? plus_m : i;
-
-    minus_m = _gist[minus_m].first;
-    minus_d = satellite::math::moment(_gist, minus_m, 2);
-
-    plus_m = _gist[plus_m].first;
-    plus_d = satellite::math::moment(_gist, plus_m, 2);
-
-    if (D < minus_d + plus_d) {
-      minus_d = minus_d * ( D / (minus_d + plus_d));
-      plus_d = D - minus_d;
-    }
+void Levels::on_radio_button_cloud_clicked() {
 
     QPainter painter(&pxm);
 
-    painter.fillRect(std::trunc(_left), 0, dx, pxm.height(), Qt::gray);
-    painter.fillRect(std::trunc(_right), 0, dx, pxm.height(), Qt::gray);
-    painter.fillRect(std::trunc((_left+_right)/2), 0, dx, pxm.height(), Qt::gray);
+    painter.fillRect(std::trunc(_left-_min_val), 0, dx, pxm.height(), Qt::gray);
+    painter.fillRect(std::trunc(_right-_min_val), 0, dx, pxm.height(), Qt::gray);
+    painter.fillRect(std::trunc((_left+_right)/2-_min_val), 0, dx, pxm.height(), Qt::gray);
     for (long i = 0; i < dx; ++i) {
-        painter.fillRect(std::trunc(_left)+i,            pxm.height() - _gist[std::trunc(_left)+i].second,            1, _gist[std::trunc(_left)+i].second, Qt::black);
-        painter.fillRect(std::trunc(_right)+i,           pxm.height() - _gist[std::trunc(_right)+i].second,           1, _gist[std::trunc(_right)+i].second, Qt::black);
-        painter.fillRect(std::trunc((_left+_right)/2)+i, pxm.height() - _gist[std::trunc((_left+_right)/2)+i].second, 1, _gist[std::trunc((_left+_right)/2)+i].second, Qt::black);
+        painter.fillRect(std::trunc(_left-_min_val)+i,            pxm.height() - _gist[std::trunc(_left-_min_val)+i].second,            1, _gist[std::trunc(_left-_min_val)+i].second, Qt::black);
+        painter.fillRect(std::trunc(_right-_min_val)+i,           pxm.height() - _gist[std::trunc(_right-_min_val)+i].second,           1, _gist[std::trunc(_right-_min_val)+i].second, Qt::black);
+        painter.fillRect(std::trunc((_left+_right)/2-_min_val)+i, pxm.height() - _gist[std::trunc((_left+_right)/2-_min_val)+i].second, 1, _gist[std::trunc((_left+_right)/2-_min_val)+i].second, Qt::black);
     }
 
-    _left = plus_m - std::sqrt(plus_d);
-    _right = plus_m + std::sqrt(plus_d);
-    if (_left < 0) _left = 0;
+    _left = _right_m - std::sqrt(_right_d);
+    _right = _right_m + std::sqrt(_right_d);
+    if (_left < _min_val) _left = _min_val;
     if (_right > _max_val) _right = _max_val;
 
 
@@ -350,14 +306,14 @@ void Levels::on_radio_button_cloud_clicked()
             ui->line_right_val->setText(QString::number(std::trunc(_right)));
         break;
         case (Unit::QUANTILE):
-            ui->line_left_val->setText(QString::number(_sum_before[std::trunc(_left)]/_sum*100, 'f', 2));
-            ui->line_right_val->setText(QString::number(_sum_before[std::trunc(_right)]/_sum*100, 'f', 2));
+            ui->line_left_val->setText(QString::number(_sum_before[std::trunc(_left-_min_val)]/_sum*100, 'f', 2));
+            ui->line_right_val->setText(QString::number(_sum_before[std::trunc(_right-_min_val)]/_sum*100, 'f', 2));
         break;
     }
 
-    painter.fillRect(std::trunc(_left), 0, dx, pxm.height(), Qt::green);
-    painter.fillRect(std::trunc(_right), 0, dx, pxm.height(), Qt::green);
-    painter.fillRect(std::trunc((_left+_right)/2), 0, dx, pxm.height(), Qt::red);
+    painter.fillRect(std::trunc(_left-_min_val), 0, dx, pxm.height(), Qt::green);
+    painter.fillRect(std::trunc(_right-_min_val), 0, dx, pxm.height(), Qt::green);
+    painter.fillRect(std::trunc((_left+_right)/2-_min_val), 0, dx, pxm.height(), Qt::red);
 
     painter.end();
     ui->label_image->setPixmap(pxm);
@@ -378,23 +334,21 @@ void Levels::uncheck_radio() {
 }
 
 void Levels::on_radio_button_default_clicked() {
-    double center, disp;
     QPainter painter(&pxm);
 
-    painter.fillRect(std::trunc(_left), 0, dx, pxm.height(), Qt::gray);
-    painter.fillRect(std::trunc(_right), 0, dx, pxm.height(), Qt::gray);
-    painter.fillRect(std::trunc((_left+_right)/2), 0, dx, pxm.height(), Qt::gray);
+    painter.fillRect(std::trunc(_left-_min_val), 0, dx, pxm.height(), Qt::gray);
+    painter.fillRect(std::trunc(_right-_min_val), 0, dx, pxm.height(), Qt::gray);
+    painter.fillRect(std::trunc((_left+_right)/2-_min_val), 0, dx, pxm.height(), Qt::gray);
     for (long i = 0; i < dx; ++i) {
-        painter.fillRect(std::trunc(_left)+i,            pxm.height() - _gist[std::trunc(_left)+i].second,            1, _gist[std::trunc(_left)+i].second, Qt::black);
-        painter.fillRect(std::trunc(_right)+i,           pxm.height() - _gist[std::trunc(_right)+i].second,           1, _gist[std::trunc(_right)+i].second, Qt::black);
-        painter.fillRect(std::trunc((_left+_right)/2)+i, pxm.height() - _gist[std::trunc((_left+_right)/2)+i].second, 1, _gist[std::trunc((_left+_right)/2)+i].second, Qt::black);
+        painter.fillRect(std::trunc(_left-_min_val)+i,            pxm.height() - _gist[std::trunc(_left-_min_val)+i].second,            1, _gist[std::trunc(_left-_min_val)+i].second, Qt::black);
+        painter.fillRect(std::trunc(_right-_min_val)+i,           pxm.height() - _gist[std::trunc(_right-_min_val)+i].second,           1, _gist[std::trunc(_right-_min_val)+i].second, Qt::black);
+        painter.fillRect(std::trunc((_left+_right)/2-_min_val)+i, pxm.height() - _gist[std::trunc((_left+_right)/2-_min_val)+i].second, 1, _gist[std::trunc((_left+_right)/2-_min_val)+i].second, Qt::black);
     }
 
-    center = satellite::math::first_row_moment(_gist);
-    disp = satellite::math::central_moment(_gist);
-
-    _left = center - std::sqrt(disp);
-    _right = center + std::sqrt(disp);
+    _left = _m - std::sqrt(_d);
+    _right = _m + std::sqrt(_d);
+    if (_left < _min_val) _left = _min_val;
+    if (_right > _max_val) _right = _max_val;
 
     switch (unit) {
         case (Unit::RAW):
@@ -402,14 +356,55 @@ void Levels::on_radio_button_default_clicked() {
             ui->line_right_val->setText(QString::number(std::trunc(_right)));
         break;
         case (Unit::QUANTILE):
-            ui->line_left_val->setText(QString::number(_sum_before[std::trunc(_left)]/_sum*100, 'f', 2));
-            ui->line_right_val->setText(QString::number(_sum_before[std::trunc(_right)]/_sum*100, 'f', 2));
+            ui->line_left_val->setText(QString::number(_sum_before[std::trunc(_left-_min_val)]/_sum*100, 'f', 2));
+            ui->line_right_val->setText(QString::number(_sum_before[std::trunc(_right-_min_val)]/_sum*100, 'f', 2));
         break;
     }
 
-    painter.fillRect(std::trunc(_left), 0, dx, pxm.height(), Qt::green);
-    painter.fillRect(std::trunc(_right), 0, dx, pxm.height(), Qt::green);
-    painter.fillRect(std::trunc((_left+_right)/2), 0, dx, pxm.height(), Qt::red);
+    painter.fillRect(std::trunc(_left-_min_val), 0, dx, pxm.height(), Qt::green);
+    painter.fillRect(std::trunc(_right-_min_val), 0, dx, pxm.height(), Qt::green);
+    painter.fillRect(std::trunc((_left+_right)/2-_min_val), 0, dx, pxm.height(), Qt::red);
+
+    painter.end();
+    ui->label_image->setPixmap(pxm);
+}
+
+void Levels::on_buttonBox_clicked(QAbstractButton *button) {
+    if (ui->buttonBox->standardButton(button) == QDialogButtonBox::Ok) {
+        _tmp_left = _left;
+        _tmp_right = _right;
+        return;
+    }
+    uncheck_radio();
+
+    QPainter painter(&pxm);
+
+    painter.fillRect(std::trunc(_left-_min_val), 0, dx, pxm.height(), Qt::gray);
+    painter.fillRect(std::trunc(_right-_min_val), 0, dx, pxm.height(), Qt::gray);
+    painter.fillRect(std::trunc((_left+_right)/2-_min_val), 0, dx, pxm.height(), Qt::gray);
+    for (long i = 0; i < dx; ++i) {
+        painter.fillRect(std::trunc(_left-_min_val)+i,            pxm.height() - _gist[std::trunc(_left-_min_val)+i].second,            1, _gist[std::trunc(_left-_min_val)+i].second, Qt::black);
+        painter.fillRect(std::trunc(_right-_min_val)+i,           pxm.height() - _gist[std::trunc(_right-_min_val)+i].second,           1, _gist[std::trunc(_right-_min_val)+i].second, Qt::black);
+        painter.fillRect(std::trunc((_left+_right)/2-_min_val)+i, pxm.height() - _gist[std::trunc((_left+_right)/2-_min_val)+i].second, 1, _gist[std::trunc((_left+_right)/2-_min_val)+i].second, Qt::black);
+    }
+
+    _left = _tmp_left;
+    _right = _tmp_right;
+
+    switch (unit) {
+        case (Unit::RAW):
+            ui->line_left_val->setText(QString::number(std::trunc(_left)));
+            ui->line_right_val->setText(QString::number(std::trunc(_right)));
+        break;
+        case (Unit::QUANTILE):
+            ui->line_left_val->setText(QString::number(_sum_before[std::trunc(_left-_min_val)]/_sum*100, 'f', 2));
+            ui->line_right_val->setText(QString::number(_sum_before[std::trunc(_right-_min_val)]/_sum*100, 'f', 2));
+        break;
+    }
+
+    painter.fillRect(std::trunc(_left-_min_val), 0, dx, pxm.height(), Qt::green);
+    painter.fillRect(std::trunc(_right-_min_val), 0, dx, pxm.height(), Qt::green);
+    painter.fillRect(std::trunc((_left+_right)/2-_min_val), 0, dx, pxm.height(), Qt::red);
 
     painter.end();
     ui->label_image->setPixmap(pxm);

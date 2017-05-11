@@ -72,7 +72,7 @@ void Graphic::on_buttonBox_clicked(QAbstractButton *button)
 {
     if (ui->buttonBox->standardButton(button) == QDialogButtonBox::Save) {
         QString fileName = QFileDialog::getSaveFileName(this, tr("Save File"), "",
-                                                        tr("Var files (*.var);;All Files (*)"));
+                                                        tr("Var files (*.var)"));
         if (fileName.isEmpty())
             return;
         std::ofstream file(fileName.toStdString());
