@@ -53,8 +53,8 @@ void MainWindow::on_actionOpen_triggered()
                                                     tr("lab 34 files (*.pro);;Var files (*.var);;Generated images (*.img)"));
     if (fileName.isEmpty())
         return;
-
-    std::ifstream file(fileName.toStdString(), std::ifstream::binary);
+    qDebug() << fileName;
+    std::ifstream file(fileName.toLocal8Bit().toStdString(), std::ifstream::binary);
     if (!file.is_open()) {
         QMessageBox::critical(this, tr("Error"), tr("Could not open file"));
         return;
