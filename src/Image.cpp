@@ -1,4 +1,4 @@
-#include "inc/Satellite.hpp"
+#include "../inc/Satellite.hpp"
 
 satellite::Image::Image ( short width, short height, const std::string& fileName ) {
   std::ifstream file;
@@ -111,7 +111,7 @@ void satellite::Image::changeMaxMin ( unsigned short minColor, unsigned short ma
 
   for (int i = 0; i < iHeight; ++i)
     for (int j = 0; j < iWidth; ++j) {
-      if ( pImage[i][j] < 0)
+      if ( pImage[i][j] < 0 )
           continue;
       if ( pImage[i][j] > maxColor )
         pImage[i][j] = maxColor;
@@ -126,7 +126,7 @@ void satellite::Image::cropColor ( unsigned short minColor, unsigned short maxCo
 
   for (int i = 0; i < iHeight; ++i)
     for (int j = 0; j < iWidth; ++j) {
-      if ( pImage[i][j] < 0)
+      if ( pImage[i][j] < 0 )
         continue;
       if ( pImage[i][j] > maxColor )
         pImage[i][j] = 0;
@@ -141,7 +141,7 @@ void satellite::Image::binary ( unsigned short border ) {
 
   for (int i = 0; i < iHeight; ++i)
     for (int j = 0; j < iWidth; ++j) {
-      if ( pImage[i][j] < 0)
+      if ( pImage[i][j] < 0 )
         continue;
       if ( pImage[i][j] >= border )
         pImage[i][j] = 255;

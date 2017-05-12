@@ -326,7 +326,7 @@ void MainWindow::on_actionLevels_triggered() {
         }
 
     scene->addPixmap(QPixmap::fromImage(img));
-    ui->graphicsView->fitInView(scene->sceneRect(), Qt::KeepAspectRatio);
+//    ui->graphicsView->fitInView(scene->sceneRect(), Qt::KeepAspectRatio);
 }
 
 void MainWindow::on_actionCalc_triggered() {
@@ -404,8 +404,10 @@ void MainWindow::on_actionSave_triggered() {
 
     if (data_type == Ui::DATA_TYPE::PRO)
         image.cropColor(levels->left(), levels->right());
-    if (binary) image.binary(1);
-
+    if (binary) {
+        image.binary(1);
+        ui->actionLevels->setEnabled(false);
+    }
     levels->init(image);
 
     switch (data_type) {

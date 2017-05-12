@@ -64,28 +64,20 @@ void Levels::init(satellite::Image& img) {
     }
     _sum_before.push_back(_sum);
     //Otsu
-    _threshold = satellite::math::threshold_Otsu(_gist);
+    std::pair<size_t, double> res;
+    res = satellite::math::threshold_Otsu(_gist);
+    _threshold = res.first;
+    std::cout << "Threshold: " << res.first << '\n'
+              << "SC: " << res.second
+              << std::endl;
     //
     //Snow/Clouds
-    double E, D;
-    E = satellite::math::first_row_moment(_gist);
-    D = satellite::math::central_moment(_gist);
-    _left_m = 0;
-    _right_m = std::trunc(E-_min_val);
-    for (unsigned long i = 0; i < std::trunc(E-_min_val); ++i)
-        _left_m = (_gist[_left_m].second > _gist[i].second) ? _left_m : i;
-    for (unsigned short i = std::trunc(E-_min_val); i < _gist.size(); ++i)
-      _right_m = (_gist[_right_m].second > _gist[i].second) ? _right_m : i;
 
-    _left_m = _gist[_left_m].first;
-    _left_d = satellite::math::moment(_gist, _left_m, 2);
-    _right_m = _gist[_right_m].first;
-    _right_d = satellite::math::moment(_gist, _right_m, 2);
+    _left_m = satellite::math::first_row_moment(_gist, 1, 0, res.first);
+    _left_d = (_gist[_threshold].first - _left_m)*(_gist[_threshold].first - _left_m);
+    _right_m = satellite::math::first_row_moment(_gist, 1, res.first, _gist.size());
+    _right_d = (_gist[_threshold].first - _right_m)*(_gist[_threshold].first - _right_m);
 
-    if (D < _left_d + _right_d) {
-      _left_d = _left_d * ( D / (_left_d + _right_d));
-      _right_d = D - _left_d;
-    }
     //
     pxm = QPixmap(max_x, max_y*1.10);
 
@@ -214,14 +206,14 @@ void Levels::on_line_left_val_editingFinished() {
         case (Unit::QUANTILE):
             buff = arg1.toDouble();
             buff *= _sum/100;
-            _left = _gist[ind_before(buff)].first+1;//TODO: sum_before_bisect
+            _left = _gist[ind_before(buff)].first;//TODO: sum_before_bisect
 
             if (_left > _right) _right = _left+1;
             if (_right > _max_val) _left = (_right = _max_val)-1;
 
-            buff = _sum_before[std::trunc(_left-_min_val)];
+            buff = _sum_before[std::trunc(_left-_min_val+1)];
             ui->line_left_val->setText(QString::number(buff/_sum*100, 'f', 2));
-            buff = _sum_before[std::trunc(_right-_min_val)];
+            buff = _sum_before[std::trunc(_right-_min_val+1)];
             ui->line_right_val->setText(QString::number(buff/_sum*100, 'f', 2));
         break;
     }
@@ -263,14 +255,14 @@ void Levels::on_line_right_val_editingFinished() {
         case (Unit::QUANTILE):
             buff = arg1.toDouble();
             buff *= _sum/100;
-            _right = _gist[ind_before(buff)].first+1;//TODO: sum_before_bisect
+            _right = _gist[ind_before(buff)].first;//TODO: sum_before_bisect
 
             if (_right <= _left) _left = _right - 1;
             if (_left < 0) _right = (_left = 0)+1;
 
-            buff = _sum_before[std::trunc(_right-_min_val)];
+            buff = _sum_before[std::trunc(_right-_min_val+1)];
             ui->line_right_val->setText(QString::number(buff/_sum*100, 'f', 2));
-            buff = _sum_before[std::trunc(_left-_min_val)];
+            buff = _sum_before[std::trunc(_left-_min_val+1)];
             ui->line_left_val->setText(QString::number(buff/_sum*100, 'f', 2));
         break;
     }
