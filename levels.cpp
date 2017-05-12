@@ -67,17 +67,21 @@ void Levels::init(satellite::Image& img) {
     std::pair<size_t, double> res;
     res = satellite::math::threshold_Otsu(_gist);
     _threshold = res.first;
-    std::cout << "Threshold: " << res.first << '\n'
+    std::cout << "Threshold: " << res.first + _min_val << '\n'
               << "SC: " << res.second
               << std::endl;
     //
     //Snow/Clouds
 
     _left_m = satellite::math::first_row_moment(_gist, 1, 0, res.first);
-    _left_d = (_gist[_threshold].first - _left_m)*(_gist[_threshold].first - _left_m);
+    _left_d = (_threshold + _min_val - _left_m)*(_threshold + _min_val - _left_m);
     _right_m = satellite::math::first_row_moment(_gist, 1, res.first, _gist.size());
-    _right_d = (_gist[_threshold].first - _right_m)*(_gist[_threshold].first - _right_m);
-
+    _right_d = (_threshold + _min_val - _right_m)*(_threshold + _min_val - _right_m);
+    std::cout << "left_m: " << _left_m << '\n'
+              << "left_d: " << std::sqrt(_left_d) << '\n'
+              << "right_m: " << _right_m << '\n'
+              << "right_d: " << std::sqrt(_right_d) << '\n'
+              << std::endl;
     //
     pxm = QPixmap(max_x, max_y*1.10);
 

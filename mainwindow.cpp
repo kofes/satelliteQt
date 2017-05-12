@@ -127,9 +127,9 @@ void MainWindow::on_actionOpen_triggered()
                         break;
                     default:
                         if (image[i][j] <= right && image[i][j] >= left)
-                           img.setPixel(j, (image.height()-1) - i, qRgb(buff-left * (255.0f / (right-left)),
-                                                                        buff-left * (255.0f / (right-left)),
-                                                                        buff-left * (255.0f / (right-left))));
+                           img.setPixel(j, (image.height()-1) - i, qRgb((buff-left) * (255.0f / (right-left)),
+                                                                        (buff-left) * (255.0f / (right-left)),
+                                                                        (buff-left) * (255.0f / (right-left))));
                         else
                            img.setPixel(j, (image.height()-1) - i, qRgb(0, 0, 0));
                     break;
@@ -316,9 +316,9 @@ void MainWindow::on_actionLevels_triggered() {
                    if (binary)
                        img.setPixel(j, (image.height()-1)-i, qRgb(255, 255, 255));
                    else
-                       img.setPixel(j, (image.height()-1) - i, qRgb(buff-left * (255.0f / (right-left)),
-                                                                    buff-left * (255.0f / (right-left)),
-                                                                    buff-left * (255.0f / (right-left))));
+                       img.setPixel(j, (image.height()-1) - i, qRgb((buff-left) * (255.0f / (right-left)),
+                                                                    (buff-left) * (255.0f / (right-left)),
+                                                                    (buff-left) * (255.0f / (right-left))));
                 } else
                    img.setPixel(j, (image.height()-1) - i, qRgb(0, 0, 0));
             break;
