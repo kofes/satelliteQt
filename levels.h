@@ -28,6 +28,11 @@ public:
     short min();
     bool binary();
 
+signals:
+    void levels_calc_progress(int);
+
+    void set_text_progress(QString);
+
 private slots:
     void on_radio_button_raw_clicked();
 
@@ -52,6 +57,9 @@ private:
     unsigned long ind_before(double& end);
 
     Ui::Levels *ui;
+
+    QIntValidator* int_valid;
+    QDoubleValidator* double_valid;
 
     QPixmap pxm;
 

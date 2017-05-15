@@ -10,9 +10,13 @@ varDialog::varDialog(QWidget *parent) :
     connect(this, SIGNAL(abort(bool)), &this->cl, SLOT(abort(bool)));
     ui->buttonBox->button(QDialogButtonBox::Abort)->setEnabled(false);
     _cancel_flag = false;
+    log_valid = new QIntValidator(this);
 }
 
 varDialog::~varDialog() {
+    fw.cancel();
+    fw.waitForFinished();
+    delete log_valid;
     delete ui;
 }
 
@@ -22,8 +26,11 @@ void varDialog::setImage(satellite::Image* src) {
     _max_x = image->width()-1;
     _max_y = image->height()-1;
 
-    ui->line_log->setValidator(new QDoubleValidator(1, std::max(image->width()-1, image->height()-1), 2, this));
-    ui->line_log->setText(QString::number(0.1, 'f', 2));
+    log_valid->setBottom(1);
+    log_valid->setTop(std::max(image->width()-1, image->height()-1));
+
+    ui->line_log->setValidator(log_valid);
+    ui->line_log->setText(QString::number(1));
 
     ui->line_top_left_x->setValidator(new QIntValidator(0, image->width()-1, this));
     ui->line_top_left_x->setText(QString::number(0));
@@ -45,8 +52,8 @@ void varDialog::setImageType(Ui::DATA_TYPE type) {
     _type = type;
 }
 
-double varDialog::dh() {
-    return ui->line_log->text().toDouble();
+int varDialog::dh() {
+    return ui->line_log->text().toInt();
 }
 
 std::vector<double> varDialog::var() {
@@ -81,10 +88,12 @@ void varDialog::on_buttonBox_clicked(QAbstractButton *button) {
                         ui->line_top_left_y->text().toDouble(),
                     width,
                     height,
-                    ui->line_log->text().toDouble(),
+                    ui->line_log->text().toInt(),
                     image,
                     type
                );
+        fw.cancel();
+        fw.waitForFinished();
         QFuture<void> future = QtConcurrent::run(&this->cl, &Calculation::operator ());
         fw.setFuture(future);
         reset(false);
@@ -104,8 +113,7 @@ void varDialog::slot_finished() {
     }
 }
 
-void varDialog::on_buttonBox_rejected()
-{
+void varDialog::on_buttonBox_rejected() {
     if (_cancel_flag) {
         _cancel_flag = false;
         fw.waitForFinished();

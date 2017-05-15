@@ -19,7 +19,7 @@ public:
 
     void setImage(satellite::Image* src);
     void setImageType(Ui::DATA_TYPE type);
-    double dh();
+    int dh();
 
     std::vector<double> var();
 
@@ -59,6 +59,8 @@ private:
     Ui::DATA_TYPE _type;
 
     short _max_x, _max_y;
+
+    QIntValidator* log_valid;
 };
 
 #endif // VARDIALOG_H

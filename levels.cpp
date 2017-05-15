@@ -9,35 +9,39 @@ Levels::Levels(QWidget *parent) :
     ui->label_image->setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Ignored);
     ui->label_image->setScaledContents(true);
     ui->checkBox_binary->setChecked(false);
+    int_valid = new QIntValidator(this);
+    double_valid = new QDoubleValidator(0, 100, 2, this);
     _sum = 0;
 }
 
-Levels::~Levels()
-{
+Levels::~Levels() {
+    delete int_valid;
+    delete double_valid;
     delete ui;
 }
 
 void Levels::init(satellite::Image& img) {
-    _max_val = 0;
-    _min_val = SHRT_MAX;
-    for (auto i = 0; i < img.height(); ++i)
-        for (auto j = 0; j < img.width(); ++j) {
-            _max_val = (_max_val > img[i][j]) ? _max_val : img[i][j];
-            _min_val = (_min_val > img[i][j] && img[i][j] > 0) ? img[i][j] : _min_val;
-        }
+
+    _max_val = img.max();
+    _min_val = img.min();
+    int_valid->setBottom(_min_val);
+    int_valid->setTop(_max_val);
+
     std::cout << "MIN_VAL: " << _min_val << '\n'
               << "MAX_VAL: " << _max_val
               << std::endl;
     _gist.clear();
     _gist.resize(_max_val-_min_val+1, std::make_pair(0, 0));
 
+    emit set_text_progress("Histogram...");
     for (int i = 0; i < img.height(); ++i)
-        for (int j = 0; j < img.width(); ++j)
+        for (int j = 0; j < img.width(); ++j) {
             if (img[i][j] > 0) {
                 _gist[img[i][j]-_min_val].first = img[i][j];
                 _gist[img[i][j]-_min_val].second++;
             }
-
+        }
+    emit levels_calc_progress(30);
     _m = satellite::math::first_row_moment(_gist);
     _d = satellite::math::central_moment(_gist);
 
@@ -57,19 +61,23 @@ void Levels::init(satellite::Image& img) {
     max_y = 0;
     _sum_before.clear();
     _sum = 0;
+    emit set_text_progress("Quantille...");
     for (auto elem : _gist) {
         max_y = (max_y < elem.second) ? elem.second : max_y ;
         _sum_before.push_back(_sum);
         _sum += elem.second;
     }
     _sum_before.push_back(_sum);
+    emit levels_calc_progress(35);
     //Otsu
+    emit set_text_progress("Otsu...");
     std::pair<size_t, double> res;
     res = satellite::math::threshold_Otsu(_gist);
     _threshold = res.first;
     std::cout << "Threshold: " << res.first + _min_val << '\n'
               << "SC: " << res.second
               << std::endl;
+    emit levels_calc_progress(99);
     //
     //Snow/Clouds
 
@@ -129,24 +137,18 @@ bool Levels::binary() {
     return _binary;
 }
 
-void Levels::on_radio_button_raw_clicked()
-{
+void Levels::on_radio_button_raw_clicked() {
     unit = Unit::RAW;
-    (const_cast<QValidator *>(ui->line_left_val->validator()))->deleteLater();
-    (const_cast<QValidator *>(ui->line_right_val->validator()))->deleteLater();
-    ui->line_left_val->setValidator(new QIntValidator(_min_val, _max_val, this));
-    ui->line_right_val->setValidator(new QIntValidator(_min_val, _max_val, this));
+    ui->line_left_val->setValidator(int_valid);
+    ui->line_right_val->setValidator(int_valid);
     ui->line_left_val->setText(QString::number(std::trunc(_left)));
     ui->line_right_val->setText(QString::number(std::trunc(_right)));
 }
 
-void Levels::on_radio_button_quantile_clicked()
-{
+void Levels::on_radio_button_quantile_clicked() {
     unit = Unit::QUANTILE;
-    (const_cast<QValidator *>(ui->line_left_val->validator()))->deleteLater();
-    (const_cast<QValidator *>(ui->line_right_val->validator()))->deleteLater();
-    ui->line_left_val->setValidator(new QDoubleValidator(0, 100, 2, this));
-    ui->line_right_val->setValidator(new QDoubleValidator(0, 100, 2, this));
+    ui->line_left_val->setValidator(double_valid);
+    ui->line_right_val->setValidator(double_valid);
     ui->line_left_val->setText(QString::number(_sum_before[std::trunc(_left-_min_val)]/_sum*100, 'f', 2));
     ui->line_right_val->setText(QString::number(_sum_before[std::trunc(_right-_min_val)]/_sum*100, 'f', 2));
 }

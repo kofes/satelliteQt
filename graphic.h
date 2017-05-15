@@ -7,8 +7,7 @@ namespace Ui {
 class Graphic;
 }
 
-class Graphic : public QDialog
-{
+class Graphic : public QDialog {
     Q_OBJECT
 
 public:

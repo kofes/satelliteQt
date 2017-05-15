@@ -27,6 +27,9 @@ protected:
 
     virtual bool eventFilter(QObject *watched, QEvent *event);
 
+public slots:
+    void levels_calc_finished();
+
 private slots:
     void on_actionOpen_triggered();
 
@@ -56,6 +59,8 @@ private:
 
     satellite::passport::Proection passport;
     satellite::Image image;
+
+    QFutureWatcher<void> fw;
 
     QString _fileName;
 

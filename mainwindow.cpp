@@ -3,8 +3,7 @@
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
-    ui(new Ui::MainWindow)
-{
+    ui(new Ui::MainWindow) {
     ui->setupUi(this);
     scene = new QGraphicsScene(this);
     levels = new Levels(this);
@@ -20,6 +19,8 @@ MainWindow::MainWindow(QWidget *parent) :
 
     set_visible_coords(false);
 
+    ui->progressBar_levels->hide();
+    ui->label_levels_status->hide();
     this->setWindowTitle(appName);
     ui->graphicsView->setDragMode(QGraphicsView::NoDrag);
     ui->graphicsView->setCursor(Qt::CrossCursor);
@@ -31,10 +32,14 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->actionLevels->setEnabled(false);
     ui->actionCalc->setEnabled(false);
     //
+    connect(&this->fw, SIGNAL(finished()), this, SLOT(levels_calc_finished()));
+    connect(this->levels, SIGNAL(levels_calc_progress(int)), ui->progressBar_levels, SLOT(setValue(int)));
+    connect(this->levels, SIGNAL(set_text_progress(QString)), ui->label_levels_status, SLOT(setText(QString)));
 }
 
-MainWindow::~MainWindow()
-{
+MainWindow::~MainWindow() {
+    fw.cancel();
+    fw.waitForFinished();
     levels->close();
     delete levels;
     dialog->close();
@@ -47,8 +52,7 @@ MainWindow::~MainWindow()
     delete ui;
 }
 
-void MainWindow::on_actionOpen_triggered()
-{
+void MainWindow::on_actionOpen_triggered() {
     QString fileName = QFileDialog::getOpenFileName(this, tr("Open File"), "",
                                                     tr("lab 34 files (*.pro);;Var files (*.var);;Generated images (*.img)"));
     if (fileName.isEmpty())
@@ -79,69 +83,40 @@ void MainWindow::on_actionOpen_triggered()
         passport = pass;
 
         image.read(passport.getCountPixelsInLine(), passport.getCountLines(), file);
-
-        levels->init(image);
+        //Future levels->init: ON
+        ui->actionLevels->setEnabled(false);
+        fw.cancel();
+        fw.waitForFinished();
+        QFuture<void> future = QtConcurrent::run(this->levels, &Levels::init, image);
+        fw.setFuture(future);
+        ui->progressBar_levels->show();
+        ui->label_levels_status->show();
+        //
         QImage img(image.width(), image.height(), QImage::Format::Format_RGB32);
 
-        std::cout << levels->max() << '\n'
-                  << (levels->right()+levels->left())/2 << " : "
-                  << (levels->right()-levels->left())/2
-                  << std::endl;
-        if (levels->max() == levels->min())
-            for (auto i = 0; i < image.height(); ++i)
-                for (auto j = 0; j < image.width(); ++j) {
-                    short buff = image[i][j];
-                    switch (buff) {
-                    case -2:
-                        img.setPixel(j, (image.height()-1) - i, qRgb(255,255,0));
-                        break;
-                    case -5:
-                        img.setPixel(j, (image.height()-1) - i, qRgb(255, 255/2, 255));
-                        break;
-                    case -7:
-                        img.setPixel(j, (image.height()-1) - i, qRgb(0, 255, 255));
-                        break;
-                    default:
-                        if (buff >= 0)
-                            img.setPixel(j, (image.height()-1) - i, qRgb(buff * (255.0f / levels->max()),
-                                                                         buff * (255.0f / levels->max()),
-                                                                         buff * (255.0f / levels->max())));
+        for (auto i = 0; i < image.height(); ++i)
+            for (auto j = 0; j < image.width(); ++j) {
+                short buff = image[i][j];
+                switch (buff) {
+                case -2:
+                    img.setPixel(j, (image.height()-1) - i, qRgb(255,255,0));
                     break;
-                    }
-                }
-        else {
-            double left = levels->left(),
-                   right = levels->right();
-            for (auto i = 0; i < image.height(); ++i)
-                for (auto j = 0; j < image.width(); ++j) {
-                    short buff = image[i][j];
-                    switch (buff) {
-                    case -2:
-                        img.setPixel(j, (image.height()-1) - i, qRgb(255,255,0));
-                        break;
-                    case -5:
-                        img.setPixel(j, (image.height()-1) - i, qRgb(255, 255/2, 255));
-                        break;
-                    case -7:
-                        img.setPixel(j, (image.height()-1) - i, qRgb(0, 255, 255));
-                        break;
-                    default:
-                        if (image[i][j] <= right && image[i][j] >= left)
-                           img.setPixel(j, (image.height()-1) - i, qRgb((buff-left) * (255.0f / (right-left)),
-                                                                        (buff-left) * (255.0f / (right-left)),
-                                                                        (buff-left) * (255.0f / (right-left))));
-                        else
-                           img.setPixel(j, (image.height()-1) - i, qRgb(0, 0, 0));
+                case -5:
+                    img.setPixel(j, (image.height()-1) - i, qRgb(255, 255/2, 255));
                     break;
-                    }
+                case -7:
+                    img.setPixel(j, (image.height()-1) - i, qRgb(0, 255, 255));
+                    break;
+                default:
+                    if (buff >= 0)
+                        img.setPixel(j, (image.height()-1) - i, qRgb(buff * (255.0f / image.max()),
+                                                                     buff * (255.0f / image.max()),
+                                                                     buff * (255.0f / image.max())));
+                break;
                 }
-        }
+            }
         //Actions enable
         ui->actionSave->setEnabled(true);
-        if (levels->max() != levels->min())
-            ui->actionLevels->setEnabled(true);
-        else
-            ui->actionLevels->setEnabled(false);
         ui->actionCalc->setEnabled(true);
         //
         scene->clear();
@@ -164,17 +139,25 @@ void MainWindow::on_actionOpen_triggered()
         file.read(reinterpret_cast<char *>(&height), sizeof(height));
         file.read(reinterpret_cast<char *>(&width), sizeof(width));
         image.read(width, height, file);
-        levels->init(image);
+
+        //Future levels->init: ON
+        ui->actionLevels->setEnabled(false);
+        fw.cancel();
+        fw.waitForFinished();
+        QFuture<void> future = QtConcurrent::run(this->levels, &Levels::init, image);
+        fw.setFuture(future);
+        ui->progressBar_levels->show();
+        ui->label_levels_status->show();
         //
+
         QImage img(image.width(), image.height(), QImage::Format::Format_RGB32);
 
         for (auto i = 0; i < image.height(); ++i)
             for (auto j = 0; j < image.width(); ++j)
-                img.setPixel(j, i, qRgb(image[i][j] * (255.0f / levels->max()), image[i][j] * (255.0f / levels->max()), image[i][j] * (255.0f / levels->max())));
+                img.setPixel(j, i, qRgb(image[i][j] * (255.0f / image.max()), image[i][j] * (255.0f / image.max()), image[i][j] * (255.0f / image.max())));
 
         //Actions enable
         ui->actionSave->setEnabled(true);
-        ui->actionLevels->setEnabled(false);
         ui->actionCalc->setEnabled(true);
         //
         scene->clear();
@@ -242,15 +225,22 @@ void MainWindow::on_actionCreate_template_triggered() {
 
     QImage img(image.width(), image.height(), QImage::Format::Format_RGB32);
 
-    levels->init(image);
+    //Future levels->init: ON
+    ui->actionLevels->setEnabled(false);
+    fw.cancel();
+    fw.waitForFinished();
+    QFuture<void> future = QtConcurrent::run(this->levels, &Levels::init, image);
+    fw.setFuture(future);
+    ui->progressBar_levels->show();
+    ui->label_levels_status->show();
+    //
 
     for (auto i = 0; i < image.height(); ++i)
         for (auto j = 0; j < image.width(); ++j)
-            img.setPixel(j, i, qRgb(image[i][j] * (255.0f / levels->max()), image[i][j] * (255.0f / levels->max()), image[i][j] * (255.0f / levels->max())));
+            img.setPixel(j, i, qRgb(image[i][j] * (255.0f / image.max()), image[i][j] * (255.0f / image.max()), image[i][j] * (255.0f / image.max())));
 
     //Actions enable
     ui->actionSave->setEnabled(true);
-    ui->actionLevels->setEnabled(false);
     ui->actionCalc->setEnabled(true);
     //
 
@@ -295,7 +285,7 @@ void MainWindow::on_actionLevels_triggered() {
 
     double left = levels->left(),
            right = levels->right();
-    if (levels->max() == levels->min())
+    if (image.max() == image.min())
         left = 0;
 
     for (auto i = 0; i < image.height(); ++i)
@@ -424,4 +414,13 @@ void MainWindow::on_actionSave_triggered() {
     default:
         break;
     }
+}
+
+void MainWindow::levels_calc_finished() {
+    ui->progressBar_levels->hide();
+    ui->label_levels_status->hide();
+    if (levels->left() != levels->right())
+        ui->actionLevels->setEnabled(true);
+    else
+        ui->actionLevels->setEnabled(false);
 }

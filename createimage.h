@@ -7,8 +7,7 @@ namespace Ui {
 class CreateImage;
 }
 
-class CreateImage : public QDialog
-{
+class CreateImage : public QDialog {
     Q_OBJECT
 
 public:
