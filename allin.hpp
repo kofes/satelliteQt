@@ -37,6 +37,12 @@ enum DATA_TYPE {
     VAR,
     IMG
 };
+
+enum FORMAT_TYPE {
+    PX,
+    M,
+    DEG
+};
 }
 
 #endif // ALLIN_HPP

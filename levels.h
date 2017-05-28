@@ -12,8 +12,7 @@ enum class Unit {
     RAW
 };
 
-class Levels : public QDialog
-{
+class Levels : public QDialog {
     Q_OBJECT
 
 public:
@@ -22,11 +21,15 @@ public:
 
     void init(satellite::Image& img);
 
-    short left();
-    short right();
-    short max();
-    short min();
-    bool binary();
+    inline short left() { return _left; }
+
+    inline short right() { return _right; }
+
+    inline short max() { return _max_val; }
+
+    inline short min() { return _min_val; }
+
+    inline bool binary() { return _binary; }
 
 signals:
     void levels_calc_progress(int);
@@ -55,6 +58,9 @@ private:
 
     double sum_before(short& end);
     unsigned long ind_before(double& end);
+
+    void reset_lines();
+    void draw_lines();
 
     Ui::Levels *ui;
 

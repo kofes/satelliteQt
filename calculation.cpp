@@ -1,9 +1,6 @@
 #include "calculation.h"
 
-Calculation::Calculation(QObject *parent) : QObject(parent)
-{
-
-}
+Calculation::Calculation(QObject *parent) : QObject(parent) {}
 
 void Calculation::set(std::vector<double>* _f, short x, short y, short dx, short dy, short dh, satellite::Image* img, Calc_type type) {
     func = _f;
@@ -41,9 +38,7 @@ void Calculation::operator ()() {
                                    *_img
                                    ));
                 h += _dh;
-                if (func->back() != 0)
-                    std::cout << h-_dh << ":" << func->back() << std::endl;
-                emit signal_progress(h/std::sqrt(_dx*_dx+_dy*_dy) * 100);
+                emit signal_progress((h-_dh)/std::sqrt(_dx*_dx+_dy*_dy) * 100);
             }
         break;
         case (Calc_type::COVARIANCE):
@@ -57,7 +52,7 @@ void Calculation::operator ()() {
                                    *_img
                                    ));
                 h += _dh;
-                emit signal_progress(h/std::sqrt(_dx*_dx+_dy*_dy) * 100);
+                emit signal_progress((h-_dh)/std::sqrt(_dx*_dx+_dy*_dy) * 100);
             }
         break;
     }

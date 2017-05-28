@@ -166,7 +166,7 @@
       </spacer>
      </item>
      <item row="2" column="0">
-      <layout class="QHBoxLayout" name="horizontalLayout_2">
+      <layout class="QHBoxLayout" name="horizontalLayout_2" stretch="1,3,2">
        <item>
         <widget class="QLabel" name="label_6">
          <property name="text">
@@ -179,6 +179,31 @@
          <property name="inputMethodHints">
           <set>Qt::ImhDigitsOnly|Qt::ImhPreferNumbers</set>
          </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QComboBox" name="comboBox_format">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Ignored" vsizetype="Fixed">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+         <item>
+          <property name="text">
+           <string>px</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>m</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>deg</string>
+          </property>
+         </item>
         </widget>
        </item>
       </layout>

@@ -14,13 +14,19 @@ public:
     explicit CreateImage(QWidget *parent = 0);
     ~CreateImage();
 
-    unsigned short width ();
-    unsigned short height ();
-    unsigned short space ();
-    unsigned short radius ();
-    satellite::Shape shape ();
-    satellite::ShapeFill fill ();
-    double epsilon ();
+    inline unsigned short width() { return _width; }
+
+    inline unsigned short height() { return _height; }
+
+    inline unsigned short space() { return _space; }
+
+    inline unsigned short radius() { return _radius; }
+
+    inline satellite::Shape shape() { return _type_shape; }
+
+    inline satellite::ShapeFill fill() { return _filled; }
+
+    inline double epsilon() { return _epsilon; }
 
 private slots:
     void on_buttonBox_rejected();

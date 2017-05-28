@@ -12,8 +12,7 @@ enum class Calc_type {
     COVARIANCE
 };
 
-class Calculation : public QObject
-{
+class Calculation : public QObject {
     Q_OBJECT
 
 public:
@@ -21,7 +20,7 @@ public:
 
     void set(std::vector<double>* _f, short x, short y, short dx, short dy, short dh, satellite::Image* img, Calc_type type);
 
-    void operator() ();
+    void operator()();
 
 signals:
     void signal_progress(int);

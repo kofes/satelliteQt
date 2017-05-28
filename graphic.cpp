@@ -3,14 +3,12 @@
 
 Graphic::Graphic(QWidget *parent) :
     QDialog(parent),
-    ui(new Ui::Graphic)
-{
+    ui(new Ui::Graphic) {
     ui->setupUi(this);
     ui->checkBox->setChecked(false);
 }
 
-Graphic::~Graphic()
-{
+Graphic::~Graphic() {
     delete ui;
 }
 
@@ -23,11 +21,26 @@ void Graphic::setVar(const std::vector<double>& src, double dh) {
     extremes.clear();
     x.resize(src.size());
     y.resize(src.size());
-    for (unsigned int i = 0; i < y.size(); ++i) {
-        x[i] = dh*i;
-        y[i] = src[i];
+    QString format;
+    double coef;
+    switch (_format_type) {
+    case (Ui::FORMAT_TYPE::PX):
+        coef = 1.0f;
+        format = "px";
+    break;
+    case (Ui::FORMAT_TYPE::M):
+        coef = (_secLat + _secLon)/720 * 111.111f;
+        format = "m";
+    break;
+    case (Ui::FORMAT_TYPE::DEG):
+        coef = (_secLat + _secLon)/720;
+        format = "deg";
+    break;
     }
-
+    for (unsigned int i = 0; i < y.size(); ++i) {
+        x[i] = dh*i*coef;
+        y[i] = src[i]*coef*coef;
+    }
     if (src.size() != 1) {
         serials.resize(src.size() - 1);
         for (unsigned int i = 0; i < src.size()-1; ++i)
@@ -38,9 +51,8 @@ void Graphic::setVar(const std::vector<double>& src, double dh) {
                 serials[i] = (src[i+1] - src[i]) > 0;
         for (unsigned int i = 1; i < serials.size(); ++i)
             if (serials[i-1] != serials[i])
-                extremes.push_back(std::make_pair(dh*i, src[i]));
+                extremes.push_back(std::make_pair(dh*i*coef, src[i]*coef*coef));
     }
-
     ui->widget->clearGraphs();//Если нужно, но очищаем все графики
     //Добавляем один график в widget
     ui->widget->addGraph();
@@ -53,8 +65,8 @@ void Graphic::setVar(const std::vector<double>& src, double dh) {
     ui->widget->graph(0)->setData(x, y);
 
     //Подписываем оси Ox и Oy
-    ui->widget->xAxis->setLabel("h");
-    ui->widget->yAxis->setLabel("Var");
+    ui->widget->xAxis->setLabel(QString("h, ") + format);
+    ui->widget->yAxis->setLabel(QString("Var, ") + format + "^2");
 
     ui->widget->xAxis->setRange(0, x.last());//Для оси Ox
 
@@ -68,8 +80,7 @@ void Graphic::setVar(const std::vector<double>& src, double dh) {
     ui->widget->replot();
 }
 
-void Graphic::on_buttonBox_clicked(QAbstractButton *button)
-{
+void Graphic::on_buttonBox_clicked(QAbstractButton *button) {
     if (ui->buttonBox->standardButton(button) == QDialogButtonBox::Save) {
         QString fileName = QFileDialog::getSaveFileName(this, tr("Save File"), "",
                                                         tr("Var files (*.var)"));
@@ -87,8 +98,7 @@ void Graphic::on_buttonBox_clicked(QAbstractButton *button)
     }
 }
 
-void Graphic::on_checkBox_stateChanged(int arg1)
-{
+void Graphic::on_checkBox_stateChanged(int arg1) {
     if (arg1 == Qt::Checked) {
         QVector<double> x, y;
         x.resize(extremes.size());
@@ -126,4 +136,13 @@ void Graphic::on_checkBox_stateChanged(int arg1)
         ui->widget->replot();
         return;
     }
+}
+
+void Graphic::setFormat(Ui::FORMAT_TYPE format_type) {
+    _format_type = format_type;
+}
+
+void Graphic::setDeg(float secLat, float secLon){
+    _secLat = secLat;
+    _secLon = secLon;
 }

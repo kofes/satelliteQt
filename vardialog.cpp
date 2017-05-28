@@ -79,6 +79,16 @@ void varDialog::on_buttonBox_clicked(QAbstractButton *button) {
             type = Calc_type::COVARIANCE;
         else if (ui->comboBox_type->currentText() == "Variogram")
             type = Calc_type::VARIOGRAM;
+        Ui::FORMAT_TYPE type_format;
+        if (ui->comboBox_format->currentText() == "px")
+            type_format = Ui::FORMAT_TYPE::PX;
+        else if (ui->comboBox_format->currentText() == "m")
+            type_format = Ui::FORMAT_TYPE::M;
+        else
+            type_format = Ui::FORMAT_TYPE::DEG;
+
+        emit format(type_format);
+
         cl.set(
                     &func,
                     ui->line_top_left_x->text().toDouble(),

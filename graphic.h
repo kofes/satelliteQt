@@ -16,6 +16,11 @@ public:
 
     void setVar(const std::vector<double>& src, double dh);
 
+    void setDeg(float secLat, float secLon);
+
+public slots:
+    void setFormat(Ui::FORMAT_TYPE format_type);
+
 private slots:
     void on_buttonBox_clicked(QAbstractButton *button);
 
@@ -23,10 +28,11 @@ private slots:
 
 private:
     Ui::Graphic *ui;
-
+    Ui::FORMAT_TYPE _format_type;
     std::vector<double> func;
     std::vector< std::pair<double, double> > extremes;
     double _dh;
+    float _secLat, _secLon;
 };
 
 #endif // GRAPHIC_H

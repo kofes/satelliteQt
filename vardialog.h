@@ -9,8 +9,7 @@ namespace Ui {
 class varDialog;
 }
 
-class varDialog : public QDialog
-{
+class varDialog : public QDialog {
     Q_OBJECT
 
 public:
@@ -41,6 +40,8 @@ private slots:
 
 signals:
     void abort(bool);
+
+    void format(Ui::FORMAT_TYPE format_type);
 
 private:
 

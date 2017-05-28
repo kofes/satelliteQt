@@ -35,6 +35,7 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(&this->fw, SIGNAL(finished()), this, SLOT(levels_calc_finished()));
     connect(this->levels, SIGNAL(levels_calc_progress(int)), ui->progressBar_levels, SLOT(setValue(int)));
     connect(this->levels, SIGNAL(set_text_progress(QString)), ui->label_levels_status, SLOT(setText(QString)));
+    connect(this->var_d, SIGNAL(format(Ui::FORMAT_TYPE)), this->graphic, SLOT(setFormat(Ui::FORMAT_TYPE)));
 }
 
 MainWindow::~MainWindow() {
@@ -316,7 +317,6 @@ void MainWindow::on_actionLevels_triggered() {
         }
 
     scene->addPixmap(QPixmap::fromImage(img));
-//    ui->graphicsView->fitInView(scene->sceneRect(), Qt::KeepAspectRatio);
 }
 
 void MainWindow::on_actionCalc_triggered() {
@@ -327,6 +327,7 @@ void MainWindow::on_actionCalc_triggered() {
     var_d->setImageType(data_type);
     if (var_d->exec() == QDialog::Rejected)
         return;
+    graphic->setDeg(passport.STEP_LATITUDE, passport.STEP_LONGITUDE);
     graphic->setVar(var_d->var(), var_d->dh());
     graphic->show();
 }
